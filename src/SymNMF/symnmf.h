@@ -52,20 +52,23 @@ double avg_W_entries(double ** normalized_similarity_matrix);
 
 void initialize_H(double **decomposition_matrix, double m, int rows_count, int columns_count);
 
-double **sym();
 /*
-Calculate and output the similarity matrix as described in 1.1.
+ * Calculate and output the similarity matrix as described in 1.1.
+ */
+double **sym();
+
+/*
+ * Calculate and output the Diagonal Degree Matrix as described in 1.2.
  */
 double **ddg(double ** similarity_matrix);
+
 /*
-Calculate and output the Diagonal Degree Matrix as described in 1.2
+ * Calculate and output the Diagonal Degree Matrix as described in 1.2.
  */
 double **norm(double** diagonal_degree_matrix , double** sym_matrix);
-/*
-Calculate and output the normalized similarity matrix as described in 1.3
- */
 
-double **symnmf(double **normalized_similarity_matrix);
- /*
- Perform full the symNMF as described in 1 and output H.
+/*
+ * Perform full the symNMF as described in 1 and output H.
  */
+double **symnmf(double **normalized_similarity_matrix);
+
