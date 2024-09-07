@@ -238,7 +238,7 @@ double avg_W_entries(double ** normalized_similarity_matrix) {
 
 double **initialize_H(double **normalized_similarity_matrix) {
     int i,j;
-    double **decomposition_matrix;
+    double** decomposition_matrix;
     double m = avg_W_entries(normalized_similarity_matrix);
     decomposition_matrix = (double**)calloc(vectors_count, sizeof(double*));
     if (decomposition_matrix == NULL){
@@ -249,7 +249,7 @@ double **initialize_H(double **normalized_similarity_matrix) {
         decomposition_matrix[i] = (double *)calloc(sizeof(double), K);
         if (decomposition_matrix == NULL){
             printf(ERR_MSG);
-            free_memory_of_matrix(i);
+            free_memory_of_matrix(decomposition_matrix, i);
             return NULL; }
         for (j = 0; j < K; j++) {
             decomposition_matrix[i][j] = ((double)rand() / RAND_MAX) * range;
@@ -341,28 +341,28 @@ double **symnmf(double **decomposition_matrix_H, double **normalized_similarity_
     while (iter_count <= MAX_ITER) {
         int i,j;
         iter_count++;
-        matrix_WH = multiply_matrices(normalized_similarity_matrix, decomposition_matrix, vectors_count, K, vectors_count);
+        matrix_WH = multiply_matrices(normalized_similarity_matrix, decomposition_matrix_H, vectors_count, K, vectors_count);
         if (matrix_WH == NULL) {
             printf(ERR_MSG);
-            free_memory_of_matrix(decomposition_matrix, vectors_count);
+            free_memory_of_matrix(decomposition_matrix_H, vectors_count);
             return NULL; }
-        matrix_H_transposed = transpose_matrix(decomposition_matrix, vectors_count, K);
+        matrix_H_transposed = transpose_matrix(decomposition_matrix_H, vectors_count, K);
         if (matrix_H_transposed == NULL) {
             printf(ERR_MSG);
-            free_memory_of_matrix(decomposition_matrix, vectors_count);
+            free_memory_of_matrix(decomposition_matrix_H, vectors_count);
             free_memory_of_matrix(matrix_WH, vectors_count);
             return NULL; }
-        matrix_H_H_t = multiply_matrices(decomposition_matrix, matrix_H_transposed, vectors_count, vectors_count, K);
+        matrix_H_H_t = multiply_matrices(decomposition_matrix_H, matrix_H_transposed, vectors_count, vectors_count, K);
         if (matrix_H_H_t == NULL) {
             printf(ERR_MSG);
-            free_memory_of_matrix(decomposition_matrix, vectors_count);
+            free_memory_of_matrix(decomposition_matrix_H, vectors_count);
             free_memory_of_matrix(matrix_WH, vectors_count);
             free_memory_of_matrix(matrix_H_transposed, vectors_count);
             return NULL; }
-        matrix_H_Ht_H = multiply_matrices(matrix_H_H_t, decomposition_matrix, vectors_count, K, vectors_count);
+        matrix_H_Ht_H = multiply_matrices(matrix_H_H_t, decomposition_matrix_H, vectors_count, K, vectors_count);
         if (matrix_H_Ht_H == NULL) {
             printf(ERR_MSG);
-            free_memory_of_matrix(decomposition_matrix, vectors_count);
+            free_memory_of_matrix(decomposition_matrix_H, vectors_count);
             free_memory_of_matrix(matrix_WH, vectors_count);
             free_memory_of_matrix(matrix_H_transposed, vectors_count);
             free_memory_of_matrix(matrix_H_H_t, vectors_count);
@@ -372,36 +372,36 @@ double **symnmf(double **decomposition_matrix_H, double **normalized_similarity_
         updated_H = (double**)calloc(vectors_count, sizeof(double*));
         if (updated_H == NULL) {
             printf(ERR_MSG);
-            free_memory_of_matrix(decomposition_matrix, vectors_count);
+            free_memory_of_matrix(decomposition_matrix_H, vectors_count);
             free_memory_of_matrix(matrix_WH, vectors_count);
             return NULL; }
         for ( i = 0; i < vectors_count; i++) {
             updated_H[i] = (double *)calloc(sizeof(double), K);
             if (updated_H[i] == NULL) {
                 printf(ERR_MSG);
-                free_memory_of_matrix(decomposition_matrix, vectors_count);
+                free_memory_of_matrix(decomposition_matrix_H, vectors_count);
                 free_memory_of_matrix(matrix_WH, vectors_count);
                 free_memory_of_matrix(updated_H, i);
                 return NULL; }
             for ( j = 0; j < K; j++) {
-                updated_H[i][j] = decomposition_matrix[i][j] * (1 - BETA + BETA * (matrix_WH[i][j] / matrix_H_Ht_H[i][j]));
+                updated_H[i][j] = decomposition_matrix_H[i][j] * (1 - BETA + BETA * (matrix_WH[i][j] / matrix_H_Ht_H[i][j]));
             } }
         free_memory_of_matrix(matrix_WH, vectors_count);
         free_memory_of_matrix(matrix_H_Ht_H, vectors_count);
-        subtraction_matrix = matrices_subtraction(updated_H, decomposition_matrix , vectors_count , K);
+        subtraction_matrix = matrices_subtraction(updated_H, decomposition_matrix_H , vectors_count , K);
         if (subtraction_matrix == NULL) {
             printf(ERR_MSG);
-            free_memory_of_matrix(decomposition_matrix, vectors_count);
+            free_memory_of_matrix(decomposition_matrix_H, vectors_count);
             free_memory_of_matrix(updated_H, vectors_count);
             return NULL; }
         frobenius_norm_value = calculate_frobenius_norm_squared(subtraction_matrix, vectors_count, K);
         free_memory_of_matrix(subtraction_matrix, vectors_count);
-        free_memory_of_matrix(decomposition_matrix, vectors_count);
-        decomposition_matrix = updated_H;
+        free_memory_of_matrix(decomposition_matrix_H, vectors_count);
+        decomposition_matrix_H = updated_H;
         if (frobenius_norm_value < EPSILON)
             break;
         }
-    return decomposition_matrix;
+    return decomposition_matrix_H;
 }
 
 int main(int argc, char **argv)

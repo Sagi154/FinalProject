@@ -15,7 +15,6 @@ def avg_W_entries(normalized_similarity_matrix, vectors_count):
 
 
 def initialize_decomposition_matrix_H(vectors_count, m, K):
-	m = avg_W_entries(normalized_similarity_matrix, vectors_count)
 	# Upper bound not tight
 	decomposition_matrix = [[np.random.uniform(low=0, high=(2 * math.sqrt(m/K) + 1e-10)) for j in range(K)] for i in range(vectors_count)]
 	return decomposition_matrix

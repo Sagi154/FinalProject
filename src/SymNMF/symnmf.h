@@ -50,7 +50,7 @@ double **matrices_subtraction(double** first_matrix, double** second_matrix, int
 
 double avg_W_entries(double ** normalized_similarity_matrix);
 
-void initialize_H(double **decomposition_matrix, double m, int rows_count, int columns_count);
+double **initialize_H(double **normalized_similarity_matrix);
 
 /*
  * Calculate and output the similarity matrix as described in 1.1.
@@ -70,5 +70,5 @@ double **norm(double** diagonal_degree_matrix , double** sym_matrix);
 /*
  * Perform full the symNMF as described in 1 and output H.
  */
-double **symnmf(double **normalized_similarity_matrix);
+double **symnmf(double **decomposition_matrix_H, double **normalized_similarity_matrix);
 
