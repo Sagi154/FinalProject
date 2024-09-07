@@ -39,22 +39,23 @@ def main():
 	try:
 		data_points = read_input_file(file_name)
 		vectors_count = len(data_points)
-		result_matrix = 1
+		result_matrix = None
 		if goal == "symnmf":
-			normalized_similarity_matrix = c.norm(data_points.tolist())
-			if normalized_similarity_matrix == 1:
+			normalized_similarity_matrix = c.norm(data_points.tolist(), vectors_count)
+			if normalized_similarity_matrix is None:
 				print("An Error Has Occurred")
 				return
 			m = avg_W_entries(normalized_similarity_matrix, vectors_count)
-			result_matrix = c.symnmf(K, initialize_decomposition_matrix_H(vectors_count, m, K), normalized_similarity_matrix)
+			result_matrix = c.symnmf(K, initialize_decomposition_matrix_H(vectors_count, m, K), normalized_similarity_matrix, vectors_count)
 		elif goal == "sym":
-			result_matrix = c.sym(data_points.tolist())
+			result_matrix = c.sym(data_points.tolist(), vectors_count)
 		elif goal == "ddg":
-			result_matrix = c.ddg(data_points.tolist())
+			result_matrix = c.ddg(data_points.tolist(), vectors_count)
 		elif goal == "norm":
-			result_matrix = c.norm(data_points.tolist())
-		if result_matrix == 1:
+			result_matrix = c.norm(data_points.tolist(), vectors_count)
+		if result_matrix is None:
 			print("An Error Has Occurred")
+			return
 		else:
 			for line in result_matrix:
 				print(",".join(str("%.4f" % element) for element in line))
