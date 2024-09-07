@@ -1,6 +1,8 @@
+#include <assert.h>
 #include <symnmf.h>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define ERR_MSG "An Error Has Occurred"
 #define DBL_MAX 1.7976931348623157e+308
@@ -76,10 +78,10 @@ void free_memory_of_lists(struct vector *head_vec, int vectors_counted)
     }
 }
 
-void free_memory_of_matrix(double **matrix, int index)
+void free_memory_of_matrix(double **matrix, int numb_of_rows)
 {
     int i;
-    for(i = 0; i < index; i++)
+    for(i = 0; i < numb_of_rows; i++)
     {
         free(matrix[i]);
     }
@@ -258,16 +260,16 @@ double **initialize_H(double **normalized_similarity_matrix) {
     return decomposition_matrix;
 }
 
-void print_centroids()
+void print_matrix(double** matrix)
 {
     int i, j;
-    for (i = 0; i < K; i++)
+    for (i = 0; i < vectors_count; i++)
     {
         for (j = 0; j < vector_length - 1; j++)
         {
-            printf("%.4f,", clusters[i].centroid[j]);
+            printf("%.4f,", matrix[i][j]);
         }
-        printf("%.4f\n", clusters[i].centroid[vector_length-1]);
+        printf("%.4f\n", matrix[i][vector_length-1]);
     }
 }
 
@@ -323,33 +325,24 @@ double **calculate_diagonal_degree_matrix(double **similarity_matrix)
 }
 
 double **calculate_normalized_similarity_matrix(double** diagonal_degree_matrix , double** sym_matrix){
-    double** inverse_square_root_matrix = (double**) calloc(sizeof(double*), vectors_count);
+    double** inverse_square_root_matrix = calculate_inverse_square_root(diagonal_degree_matrix);
     if (inverse_square_root_matrix == NULL) {
-        printf(ERR_MSG);
         return NULL;
     }
-    inverse_square_root_matrix = calculate_inverse_square_root(diagonal_degree_matrix);
 
-    double** graph_Laplacian = (double**) calloc(sizeof(double*), vectors_count);
-    if (graph_Laplacian == NULL) {
-        printf(ERR_MSG);
+    double** graph_Laplacian_left = multiply_matrices(inverse_square_root_matrix, sym_matrix , vectors_count, vectors_count, vectors_count);
+    if (graph_Laplacian_left == NULL) {
         free_memory_of_matrix(inverse_square_root_matrix, vectors_count);
         return NULL;
     }
 
-    graph_Laplacian = multiply_matrices(inverse_square_root_matrix, sym_matrix , vectors_count, vectors_count, vectors_count);
+    double** graph_Laplacian = multiply_matrices(graph_Laplacian_left, inverse_square_root_matrix, vectors_count, vectors_count, vectors_count);
     if (graph_Laplacian == NULL) {
         free_memory_of_matrix(inverse_square_root_matrix, vectors_count);
+        free_memory_of_matrix(graph_Laplacian_left, vectors_count);
         return NULL;
     }
-
-    graph_Laplacian = multiply_matrices(graph_Laplacian, inverse_square_root_matrix, vectors_count, vectors_count, vectors_count);
-    if (graph_Laplacian == NULL) {
-        free_memory_of_matrix(inverse_square_root_matrix, vectors_count);
-        free_memory_of_matrix(graph_Laplacian, vectors_count);
-        return NULL;
-    }
-
+    free_memory_of_matrix(graph_Laplacian_left, vectors_count);
     free_memory_of_matrix(inverse_square_root_matrix, vectors_count);
     return graph_Laplacian;
 }
@@ -426,143 +419,104 @@ double **calculate_final_decomposition_matrix_symnmf(double **decomposition_matr
     return decomposition_matrix_H;
 }
 
-int main(int argc, char **argv)
-{
-    struct vector *head_vec, *curr_vec;
-    struct cord *head_cord, *curr_cord;
-    double n, k_arg, iter_limit_arg;
-    char c, *endptr1, *endptr2;
-    int flag, cord_count;
+
+int get_matrix_dimensions( char* file_name) {
+    char c;
     vectors_count = 0;
-    cord_count = 0;
-    vector_length = 1;
-    flag = 0;
-    int iter_limit = 200;
-    if (argc == 2)
-    {
-        k_arg = strtod(argv[1], &endptr1);
-    }
-    else if (argc == 3)
-    {
-        k_arg = strtod(argv[1], &endptr1);
-        iter_limit_arg = strtod(argv[2], &endptr2);
-    }
-
-    if (*endptr1 != '\0') {
-        printf("Invalid number of clusters!\n");
-        return 1;
-    }
-    if (!is_double_integer(k_arg))
-    {
-        printf("Invalid number of clusters!\n");
-        return 1;
-    }
-    K = (int)k_arg;
-    if (!(1 < K ))
-    {
-        printf("Invalid number of clusters!\n");
-        return 1;
-    }
-    if (argc == 3)
-    {
-        if (*endptr2 != '\0')
-        {
-            printf("Invalid maximum iteration!\n");
-            return 1;
-        }
-        if (!is_double_integer(iter_limit_arg))
-        {
-            printf("Invalid maximum iteration!\n");
-            return 1;
-        }
-        iter_limit = (int)iter_limit_arg;
-        if ( !(1 < iter_limit && iter_limit < 1000))
-        {
-            printf("Invalid maximum iteration!\n");
-            return 1;
-        }
-    }
-
-    head_cord = calloc(sizeof(struct cord), 1);
-    if (head_cord == NULL)
-    {
+    vector_length = 0;
+    int flag =0;
+    FILE* vectors_file = fopen(file_name, "r");
+    if(vectors_file == NULL) {
         printf(ERR_MSG);
         return 1;
     }
-    curr_cord = head_cord;
-    curr_cord->next = NULL;
-    cord_count++;
-    head_vec = calloc(sizeof(struct vector), 1);
-    if (head_vec == NULL)
-    {
-        printf(ERR_MSG);
-        free(head_cord);
-        return 1;
-    }
-    curr_vec = head_vec;
-    curr_vec->next = NULL;
-    while (scanf("%lf%c", &n, &c) == 2)
-    {
-        if (c == '\n')
-        {
-            cord_count = 0;
-            flag = 1;
+
+    while((c = fgetc(vectors_file)) != EOF) {
+        if(c == '\n') {
+            if(flag==0) {
+                flag=1;
+            }
             vectors_count++;
-            curr_cord->value = n;
-            curr_vec->cords = head_cord;
-            curr_vec->next = calloc(sizeof(struct vector), 1);
-            if (curr_vec->next == NULL)
-            {
-                printf(ERR_MSG);
-                free_memory_of_lists(head_vec, vectors_count);
-                return 1;
-            }
-            curr_vec = curr_vec->next;
-            curr_vec->next = NULL;
-            head_cord = calloc(sizeof(struct cord), 1);
-            if (head_cord == NULL)
-            {
-                printf(ERR_MSG);
-                free_memory_of_lists(head_vec, vectors_count);
-                return 1;
-            }
-            cord_count++;
-            curr_cord = head_cord;
-            curr_cord->next = NULL;
-            continue;
         }
-        if (!flag)
-        {
-        vector_length++;
+        if(flag==0) {
+            vector_length++;
         }
-        curr_cord->value = n;
-        curr_cord->next = calloc(sizeof(struct cord), 1);
-        if (curr_cord->next == NULL)
-        {
+    }
+    rewind(vectors_file);
+    fclose(vectors_file);
+    return 0;
+}
+
+int read_vectors( char* file_name) {
+    FILE* vectors_file = fopen(file_name, "r");
+    if(vectors_file == NULL) {
+        printf(ERR_MSG);
+        return 1;
+    }
+    data_vectors = (double**) calloc(vectors_count, sizeof(double*));
+    if(data_vectors == NULL) {
+        printf(ERR_MSG);
+        return 1;
+    }
+    for(int i = 0; i < vectors_count; i++) {
+        data_vectors[i] = (double*) calloc(vector_length, sizeof(double));
+        if(data_vectors[i] == NULL) {
             printf(ERR_MSG);
-            fprintf(stderr, ERR_MSG);
-            free_vector_cords(head_cord, cord_count);
-            free_memory_of_lists(head_vec, vectors_count);
+            free_memory_of_matrix(data_vectors, i);
             return 1;
         }
-        cord_count++;
-        curr_cord = curr_cord->next;
-        curr_cord->next = NULL;
+        for(int j = 0; j < vector_length; j++) {
+            fscanf(vectors_file, "%f", &data_vectors[i][j]);
+        }
+        fclose(vectors_file);
+        return 0;
     }
-    if (!(K < vectors_count))
-    {
-        printf("Invalid number of clusters!\n");
-        free_memory_of_lists(head_vec, vectors_count);
-        free(head_cord);
+}
+
+int main(int argc, char **argv){
+    if (argc != 3) {
+        printf(ERR_MSG);
         return 1;
     }
-    failure = create_vector_arr(head_vec);
-    if (failure)
-    {
-        free_memory_of_lists(head_vec, vectors_count);
-        free(head_cord);
+    char* file_name = argv[2];
+    char* operation= argv[1];
+    if(get_matrix_dimensions(file_name) ==1) {
         return 1;
     }
-    free_memory_of_lists(head_vec, vectors_count);
-    free(head_cord);
+    if(read_vectors(file_name) ==1) {
+        return 1;
+    }
+    double** sym_matrix;
+    double** ddg_matrix;
+    double** normalized_similarity_matrix;
+    sym_matrix = calculate_similarity_matrix();
+    if(sym_matrix == NULL) {
+        return 1;
+    }
+
+    if(operation == "sym") {
+        print_matrix(sym_matrix);
+    }
+    else {
+        ddg_matrix = calculate_diagonal_degree_matrix(sym_matrix);
+        if(ddg_matrix == NULL) {
+            free_memory_of_matrix(sym_matrix, vectors_count);
+            return 1;
+        }
+        if(operation == "ddg") {
+            print_matrix(ddg_matrix);
+        }
+        else if(operation == "norm") {
+            normalized_similarity_matrix = calculate_normalized_similarity_matrix(sym_matrix, ddg_matrix);
+            if(normalized_similarity_matrix == NULL) {
+                return 1;
+            }
+            print_matrix(normalized_similarity_matrix);
+            free_memory_of_matrix(normalized_similarity_matrix, vectors_count);
+        }
+        free_memory_of_matrix(ddg_matrix, vectors_count);
+    }
+    free_memory_of_matrix(sym_matrix, vectors_count);
+    free_memory_of_matrix(data_vectors, vectors_count);
+    return 0;
 }
