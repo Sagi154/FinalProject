@@ -10,7 +10,7 @@
 
 
 int vectors_count, vector_length, K, failure;
-double **vector_array;
+double **data_vectors;
 struct cluster *clusters = NULL;
 
 double calculate_squared_euclidean_distance(double *first_vector, double *second_vector)
@@ -91,9 +91,9 @@ void free_memory_of_vectors_array(int vectors_counted)
     int i;
     for(i = 0; i < vectors_counted; i++)
     {
-        free(vector_array[i]);
+        free(data_vectors[i]);
     }
-    free(vector_array);
+    free(data_vectors);
 }
 
 int create_vector_arr(struct vector *head_vec)
@@ -103,8 +103,8 @@ int create_vector_arr(struct vector *head_vec)
     struct cord *tmp_cord;
     double *vector_i;
     tmp_vec = head_vec;
-    vector_array = (double**)calloc(sizeof(double*), vectors_count);
-    if (vector_array == NULL)
+    data_vectors = (double**)calloc(sizeof(double*), vectors_count);
+    if (data_vectors == NULL)
     {
         printf(ERR_MSG);
         return 1;
@@ -125,7 +125,7 @@ int create_vector_arr(struct vector *head_vec)
             tmp_cord = tmp_cord->next;
         }
         tmp_vec= tmp_vec->next;
-        vector_array[i] = vector_i;
+        data_vectors[i] = vector_i;
     }
     return 0;
 }
@@ -247,7 +247,7 @@ double **initialize_H(double **normalized_similarity_matrix) {
     double range = 2 * sqrt(m/K);
     for (i = 0; i < vectors_count; i++) {
         decomposition_matrix[i] = (double *)calloc(sizeof(double), K);
-        if (decomposition_matrix == NULL){
+        if (decomposition_matrix[i] == NULL){
             printf(ERR_MSG);
             free_memory_of_matrix(decomposition_matrix, i);
             return NULL; }
@@ -258,7 +258,7 @@ double **initialize_H(double **normalized_similarity_matrix) {
     return decomposition_matrix;
 }
 
-double **sym(){
+double **calculate_similarity_matrix(){
     int i,j;
     double **sym_matrix = (double**) calloc(sizeof(double*), vectors_count);
     if (sym_matrix == NULL) {
@@ -269,6 +269,7 @@ double **sym(){
         sym_matrix[i] = (double *)calloc(sizeof(double), vectors_count);
         if (sym_matrix[i] == NULL)
         {
+            free_memory_of_matrix(sym_matrix, i);
             printf(ERR_MSG);
             return NULL;
         }
@@ -277,28 +278,38 @@ double **sym(){
                 sym_matrix[i][j] = 0;
             }
             else{
-                sym_matrix[i][j] = exp(-0.5 * calculate_squared_euclidean_distance(vector_array[i], vector_array[j])) ;
+                sym_matrix[i][j] = exp(-0.5 * calculate_squared_euclidean_distance(data_vectors[i], data_vectors[j])) ;
             }
         }
     }
     return sym_matrix;
 }
 
-double **ddg(double ** similarity_matrix)
+double **calculate_diagonal_degree_matrix(double **similarity_matrix)
 {
     int i,j;
     double i_row_sum = 0.0;
     double **diagonal_degree_matrix = (double**) calloc(vectors_count, sizeof(double*));
+    if (diagonal_degree_matrix == NULL) {
+        printf(ERR_MSG);
+        return NULL; }
     for(i = 0; i < vectors_count; i++){
         diagonal_degree_matrix[i] = (double *)calloc(sizeof(double), vectors_count);
+        if (diagonal_degree_matrix[i] == NULL)
+        {
+            free_memory_of_matrix(diagonal_degree_matrix, i);
+            printf(ERR_MSG);
+            return NULL;
+        }
         for(j = 0; j < vectors_count; j++) {
             i_row_sum += similarity_matrix[i][j];
         }
         diagonal_degree_matrix[i][i] = i_row_sum;
     }
+    return diagonal_degree_matrix;
 }
 
-double **norm(double** diagonal_degree_matrix , double** sym_matrix){
+double **calculate_normalized_similarity_matrix(double** diagonal_degree_matrix , double** sym_matrix){
     double** inverse_square_root_matrix = (double**) calloc(sizeof(double*), vectors_count);
     if (inverse_square_root_matrix == NULL) {
         printf(ERR_MSG);
@@ -330,9 +341,7 @@ double **norm(double** diagonal_degree_matrix , double** sym_matrix){
     return graph_Laplacian;
 }
 
-
-
-double **symnmf(double **decomposition_matrix_H, double **normalized_similarity_matrix) {
+double **calculate_final_decomposition_matrix_symnmf(double **decomposition_matrix_H, double **normalized_similarity_matrix) {
     int iter_count;
     double frobenius_norm_value;
     double **matrix_WH, **matrix_H_transposed, **matrix_H_H_t, **matrix_H_Ht_H, **subtraction_matrix;
