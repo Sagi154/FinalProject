@@ -258,6 +258,19 @@ double **initialize_H(double **normalized_similarity_matrix) {
     return decomposition_matrix;
 }
 
+void print_centroids()
+{
+    int i, j;
+    for (i = 0; i < K; i++)
+    {
+        for (j = 0; j < vector_length - 1; j++)
+        {
+            printf("%.4f,", clusters[i].centroid[j]);
+        }
+        printf("%.4f\n", clusters[i].centroid[vector_length-1]);
+    }
+}
+
 double **calculate_similarity_matrix(){
     int i,j;
     double **sym_matrix = (double**) calloc(sizeof(double*), vectors_count);
