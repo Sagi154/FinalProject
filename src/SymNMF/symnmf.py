@@ -43,7 +43,6 @@ def main():
 		if goal == "symnmf":
 			normalized_similarity_matrix = c.norm(data_points.tolist(), vectors_count)
 			if normalized_similarity_matrix is None:
-				print("An Error Has Occurred")
 				return
 			m = avg_W_entries(normalized_similarity_matrix, vectors_count)
 			result_matrix = c.symnmf(K, initialize_decomposition_matrix_H(vectors_count, m, K), normalized_similarity_matrix, vectors_count)
@@ -54,7 +53,6 @@ def main():
 		elif goal == "norm":
 			result_matrix = c.norm(data_points.tolist(), vectors_count)
 		if result_matrix is None:
-			print("An Error Has Occurred")
 			return
 		else:
 			for line in result_matrix:
