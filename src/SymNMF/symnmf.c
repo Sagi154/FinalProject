@@ -4,12 +4,16 @@
 
 #define ERR_MSG "An Error Has Occurred"
 #define DBL_MAX 1.7976931348623157e+308
+#define BETA 0.5
+#define EPSILON 0.0001
+#define MAX_ITER 300
 
-int vectors_count, vector_length, iter_limit, K, failure;
-double** vector_array;
-struct cluster* clusters = NULL;
 
-double calculate_squared_euclidean_distance(double* first_vector, double* second_vector)
+int vectors_count, vector_length, K, failure;
+double **vector_array;
+struct cluster *clusters = NULL;
+
+double calculate_squared_euclidean_distance(double *first_vector, double *second_vector)
 {
     double sum_of_points;
     int i;
@@ -21,10 +25,20 @@ double calculate_squared_euclidean_distance(double* first_vector, double* second
     return sum_of_points;
 }
 
-double calculate_frobenius_form(){
+double calculate_frobenius_norm_squared(double **matrix, int rows_count, int columns_count)
+{
+    int i,j;
+    double sum = 0.0;
+    for (i = 0; i < rows_count; i++) {
+        for (j = 0; j < columns_count; j++) {
+            sum += matrix[i][j] * matrix[i][j];
+        }
+    }
+    return sum;
 }
 
-void copy_vector_by_cord(double* copy_from, double* copy_to)
+
+void copy_vector_by_cord(double *copy_from, double *copy_to)
 {
     int i;
     for(i = 0; i < vector_length; i++)
@@ -62,6 +76,16 @@ void free_memory_of_lists(struct vector *head_vec, int vectors_counted)
     }
 }
 
+void free_memory_of_matrix(double **matrix, int index)
+{
+    int i;
+    for(i = 0; i < index; i++)
+    {
+        free(matrix[i]);
+    }
+    free(matrix);
+}
+
 void free_memory_of_vectors_array(int vectors_counted)
 {
     int i;
@@ -72,62 +96,7 @@ void free_memory_of_vectors_array(int vectors_counted)
     free(vector_array);
 }
 
-void free_memory_of_matrix(double** matrix, int index)
-{
-    int i;
-    for(i = 0; i < index; i++)
-    {
-        free(matrix[i]);
-    }
-    free(matrix);
-}
-
-double** calculate_inverse_square_root(double** diagonal_matrix) {
-    int i;
-    double **inverse_square_root_matrix = (double **) calloc(sizeof(double *), vector_length);
-    if (inverse_square_root_matrix == NULL) {
-        printf(ERR_MSG);
-        return NULL;
-    }
-    for (i = 0; i < vectors_count; i++) {
-        inverse_square_root_matrix[i] = (double *)calloc(sizeof(double), vector_length);
-        if (inverse_square_root_matrix[i] == NULL)
-        {
-            free_memory_of_matrix(inverse_square_root_matrix, i);
-            printf(ERR_MSG);
-            return NULL;
-        }
-        inverse_square_root_matrix[i][i] = 1/ sqrt(diagonal_matrix[i][i]);
-    }
-    return inverse_square_root_matrix;
-}
-
-double** multiply_matrices(double** first_matrix, double** second_matrix) {
-    int i,j,k;
-    double **product_matrix = (double **) calloc(sizeof(double *), vector_length);
-    if (product_matrix == NULL) {
-        printf(ERR_MSG);
-        return NULL;
-    }
-    for (i = 0; i < vectors_count; i++) {
-        product_matrix[i] = (double *)calloc(sizeof(double), vector_length);
-        if (product_matrix[i] == NULL)
-        {
-            printf(ERR_MSG);
-            free_memory_of_matrix(product_matrix, i);
-            return NULL;
-        }
-        for (j = 0; j < vector_length; j++) {
-            for (k = 0; k < vector_length; k++) {
-                product_matrix[i][j] += first_matrix[i][k] * second_matrix[k][j];
-            }
-        }
-    }
-    return product_matrix;
-
-}
-
-int create_vector_arr(struct vector* head_vec)
+int create_vector_arr(struct vector *head_vec)
 {
     int i, j;
     struct vector *tmp_vec;
@@ -166,64 +135,191 @@ int is_double_integer(double value)
     return value == (int)value;
 }
 
-double **symnmf();
-/*
-Perform full the symNMF as described in 1 and output H.
- */
-double **sym(){
-        int i,j;
-        double** sym_matrix = (double**) calloc(sizeof(double*), vector_length);
-        if (sym_matrix == NULL) {
+double **calculate_inverse_square_root(double **diagonal_matrix) {
+    int i;
+    double **inverse_square_root_matrix = (double **) calloc(sizeof(double *), vector_length);
+    if (inverse_square_root_matrix == NULL) {
+        printf(ERR_MSG);
+        return NULL;
+    }
+    for (i = 0; i < vectors_count; i++) {
+        inverse_square_root_matrix[i] = (double *)calloc(sizeof(double), vector_length);
+        if (inverse_square_root_matrix[i] == NULL)
+        {
+            free_memory_of_matrix(inverse_square_root_matrix, i);
             printf(ERR_MSG);
             return NULL;
         }
-        for (i = 0; i < vectors_count; i++){
-            sym_matrix[i] = (double *)calloc(sizeof(double), vector_length);
-            if (sym_matrix[i] == NULL)
-            {
-                printf(ERR_MSG);
-                return NULL;
-            }
-          for (j = 0; j < vector_length; j++){
-              if(i == j){
-                sym_matrix[i][j] = 0;
-              }
-              else{
-                sym_matrix[i][j] = exp(-0.5 * calculate_squared_euclidean_distance(vector_array[i], vector_array[j])) ;
-              }
-          }
-        }
-        return sym_matrix;
+        inverse_square_root_matrix[i][i] = 1/ sqrt(diagonal_matrix[i][i]);
+    }
+    return inverse_square_root_matrix;
 }
-/*
-Calculate and output the similarity matrix as described in 1.1.
- */
-double **ddg();
-/*
-Calculate and output the Diagonal Degree Matrix as described in 1.2
- */
-double **norm(double** diagonal_degree_matrix , double** sym_matrix) {
-    double** inverse_square_root_matrix = (double**) calloc(sizeof(double*), vector_length);
+
+double **multiply_matrices(double **first_matrix, double **second_matrix, int rows_count, int columns_count, int common_count) {
+    int i,j,k;
+    double **product_matrix = (double **) calloc(sizeof(double *), rows_count);
+    if (product_matrix == NULL) {
+        printf(ERR_MSG);
+        return NULL;
+    }
+    for (i = 0; i < rows_count; i++) {
+        product_matrix[i] = (double *)calloc(sizeof(double), columns_count);
+        if (product_matrix[i] == NULL)
+        {
+            printf(ERR_MSG);
+            free_memory_of_matrix(product_matrix, i);
+            return NULL;
+        }
+        for (j = 0; j < columns_count; j++) {
+            for (k = 0; k < common_count; k++) {
+                product_matrix[i][j] += first_matrix[i][k] * second_matrix[k][j];
+            }
+        }
+    }
+    return product_matrix;
+}
+
+double **transpose_matrix(double **matrix, int rows_count, int columns_count) {
+    int i,j;
+    double **transpose_matrix = (double **) calloc(sizeof(double *), rows_count);
+    if (transpose_matrix == NULL)
+    {
+        printf(ERR_MSG);
+        return NULL;
+    }
+    for (i = 0; i < rows_count; i++) {
+        transpose_matrix[i] = (double *)calloc(sizeof(double), columns_count);
+        if (transpose_matrix[i] == NULL)
+        {
+            free_memory_of_matrix(transpose_matrix, i);
+            printf(ERR_MSG);
+            return NULL;
+        }
+        for (j = 0; j < columns_count; j++) {
+            transpose_matrix[i][j] = matrix[j][i];
+        }
+    }
+    return transpose_matrix;
+}
+
+double **matrices_subtraction(double** first_matrix, double** second_matrix, int rows_count, int columns_count) {
+    int i,j;
+    double **subtraction_matrix = (double **) calloc(sizeof(double *), rows_count);
+    if (subtraction_matrix == NULL)
+    {
+        printf(ERR_MSG);
+        return NULL;
+    }
+    for (i = 0; i < rows_count; i++) {
+        subtraction_matrix[i] = (double *)calloc(sizeof(double), columns_count);
+        if (subtraction_matrix[i] == NULL)
+        {
+            free_memory_of_matrix(subtraction_matrix, i);
+            printf(ERR_MSG);
+            return NULL;
+        }
+        for (j = 0; j < columns_count; j++) {
+            subtraction_matrix[i][j] = first_matrix[i][j] - second_matrix[i][j];
+        }
+    }
+    return subtraction_matrix;
+}
+
+double avg_W_entries(double ** normalized_similarity_matrix) {
+    int i,j;
+    double sum = 0;
+    for (int i = 0; i < vectors_count; i++) {
+        for (int j = 0; j < vectors_count; j++) {
+            sum += normalized_similarity_matrix[i][j];
+        }
+    }
+    return sum / (vectors_count * vectors_count);
+}
+
+double **initialize_H(double **normalized_similarity_matrix) {
+    int i,j;
+    double** decomposition_matrix;
+    double m = avg_W_entries(normalized_similarity_matrix);
+    decomposition_matrix = (double**)calloc(vectors_count, sizeof(double*));
+    if (decomposition_matrix == NULL){
+        printf(ERR_MSG);
+        return NULL; }
+    double range = 2 * sqrt(m/K);
+    for (i = 0; i < vectors_count; i++) {
+        decomposition_matrix[i] = (double *)calloc(sizeof(double), K);
+        if (decomposition_matrix == NULL){
+            printf(ERR_MSG);
+            free_memory_of_matrix(decomposition_matrix, i);
+            return NULL; }
+        for (j = 0; j < K; j++) {
+            decomposition_matrix[i][j] = ((double)rand() / RAND_MAX) * range;
+        }
+    }
+    return decomposition_matrix;
+}
+
+double **sym(){
+    int i,j;
+    double **sym_matrix = (double**) calloc(sizeof(double*), vectors_count);
+    if (sym_matrix == NULL) {
+        printf(ERR_MSG);
+        return NULL;
+    }
+    for (i = 0; i < vectors_count; i++){
+        sym_matrix[i] = (double *)calloc(sizeof(double), vectors_count);
+        if (sym_matrix[i] == NULL)
+        {
+            printf(ERR_MSG);
+            return NULL;
+        }
+        for (j = 0; j < vectors_count; j++){
+            if(i == j){
+                sym_matrix[i][j] = 0;
+            }
+            else{
+                sym_matrix[i][j] = exp(-0.5 * calculate_squared_euclidean_distance(vector_array[i], vector_array[j])) ;
+            }
+        }
+    }
+    return sym_matrix;
+}
+
+double **ddg(double ** similarity_matrix)
+{
+    int i,j;
+    double i_row_sum = 0.0;
+    double **diagonal_degree_matrix = (double**) calloc(vectors_count, sizeof(double*));
+    for(i = 0; i < vectors_count; i++){
+        diagonal_degree_matrix[i] = (double *)calloc(sizeof(double), vectors_count);
+        for(j = 0; j < vectors_count; j++) {
+            i_row_sum += similarity_matrix[i][j];
+        }
+        diagonal_degree_matrix[i][i] = i_row_sum;
+    }
+}
+
+double **norm(double** diagonal_degree_matrix , double** sym_matrix){
+    double** inverse_square_root_matrix = (double**) calloc(sizeof(double*), vectors_count);
     if (inverse_square_root_matrix == NULL) {
         printf(ERR_MSG);
         return NULL;
     }
     inverse_square_root_matrix = calculate_inverse_square_root(diagonal_degree_matrix);
 
-    double** graph_Laplacian = (double**) calloc(sizeof(double*), vector_length);
+    double** graph_Laplacian = (double**) calloc(sizeof(double*), vectors_count);
     if (graph_Laplacian == NULL) {
         printf(ERR_MSG);
         free_memory_of_matrix(inverse_square_root_matrix, vectors_count);
         return NULL;
     }
 
-    graph_Laplacian = multiply_matrices(inverse_square_root_matrix, sym_matrix);
+    graph_Laplacian = multiply_matrices(inverse_square_root_matrix, sym_matrix , vectors_count, vectors_count, vectors_count);
     if (graph_Laplacian == NULL) {
         free_memory_of_matrix(inverse_square_root_matrix, vectors_count);
         return NULL;
     }
 
-    graph_Laplacian = multiply_matrices(graph_Laplacian, inverse_square_root_matrix);
+    graph_Laplacian = multiply_matrices(graph_Laplacian, inverse_square_root_matrix, vectors_count, vectors_count, vectors_count);
     if (graph_Laplacian == NULL) {
         free_memory_of_matrix(inverse_square_root_matrix, vectors_count);
         free_memory_of_matrix(graph_Laplacian, vectors_count);
@@ -233,11 +329,80 @@ double **norm(double** diagonal_degree_matrix , double** sym_matrix) {
     free_memory_of_matrix(inverse_square_root_matrix, vectors_count);
     return graph_Laplacian;
 }
-/*
-Calculate and output the normalized similarity matrix as described in 1.3
- */
 
 
+
+double **symnmf(double **decomposition_matrix_H, double **normalized_similarity_matrix) {
+    int iter_count;
+    double frobenius_norm_value;
+    double **matrix_WH, **matrix_H_transposed, **matrix_H_H_t, **matrix_H_Ht_H, **subtraction_matrix;
+    double **updated_H;
+    iter_count = 0;
+    while (iter_count <= MAX_ITER) {
+        int i,j;
+        iter_count++;
+        matrix_WH = multiply_matrices(normalized_similarity_matrix, decomposition_matrix_H, vectors_count, K, vectors_count);
+        if (matrix_WH == NULL) {
+            printf(ERR_MSG);
+            free_memory_of_matrix(decomposition_matrix_H, vectors_count);
+            return NULL; }
+        matrix_H_transposed = transpose_matrix(decomposition_matrix_H, vectors_count, K);
+        if (matrix_H_transposed == NULL) {
+            printf(ERR_MSG);
+            free_memory_of_matrix(decomposition_matrix_H, vectors_count);
+            free_memory_of_matrix(matrix_WH, vectors_count);
+            return NULL; }
+        matrix_H_H_t = multiply_matrices(decomposition_matrix_H, matrix_H_transposed, vectors_count, vectors_count, K);
+        if (matrix_H_H_t == NULL) {
+            printf(ERR_MSG);
+            free_memory_of_matrix(decomposition_matrix_H, vectors_count);
+            free_memory_of_matrix(matrix_WH, vectors_count);
+            free_memory_of_matrix(matrix_H_transposed, vectors_count);
+            return NULL; }
+        matrix_H_Ht_H = multiply_matrices(matrix_H_H_t, decomposition_matrix_H, vectors_count, K, vectors_count);
+        if (matrix_H_Ht_H == NULL) {
+            printf(ERR_MSG);
+            free_memory_of_matrix(decomposition_matrix_H, vectors_count);
+            free_memory_of_matrix(matrix_WH, vectors_count);
+            free_memory_of_matrix(matrix_H_transposed, vectors_count);
+            free_memory_of_matrix(matrix_H_H_t, vectors_count);
+            return NULL; }
+        free_memory_of_matrix(matrix_H_transposed, vectors_count);
+        free_memory_of_matrix(matrix_H_H_t, vectors_count);
+        updated_H = (double**)calloc(vectors_count, sizeof(double*));
+        if (updated_H == NULL) {
+            printf(ERR_MSG);
+            free_memory_of_matrix(decomposition_matrix_H, vectors_count);
+            free_memory_of_matrix(matrix_WH, vectors_count);
+            return NULL; }
+        for ( i = 0; i < vectors_count; i++) {
+            updated_H[i] = (double *)calloc(sizeof(double), K);
+            if (updated_H[i] == NULL) {
+                printf(ERR_MSG);
+                free_memory_of_matrix(decomposition_matrix_H, vectors_count);
+                free_memory_of_matrix(matrix_WH, vectors_count);
+                free_memory_of_matrix(updated_H, i);
+                return NULL; }
+            for ( j = 0; j < K; j++) {
+                updated_H[i][j] = decomposition_matrix_H[i][j] * (1 - BETA + BETA * (matrix_WH[i][j] / matrix_H_Ht_H[i][j]));
+            } }
+        free_memory_of_matrix(matrix_WH, vectors_count);
+        free_memory_of_matrix(matrix_H_Ht_H, vectors_count);
+        subtraction_matrix = matrices_subtraction(updated_H, decomposition_matrix_H , vectors_count , K);
+        if (subtraction_matrix == NULL) {
+            printf(ERR_MSG);
+            free_memory_of_matrix(decomposition_matrix_H, vectors_count);
+            free_memory_of_matrix(updated_H, vectors_count);
+            return NULL; }
+        frobenius_norm_value = calculate_frobenius_norm_squared(subtraction_matrix, vectors_count, K);
+        free_memory_of_matrix(subtraction_matrix, vectors_count);
+        free_memory_of_matrix(decomposition_matrix_H, vectors_count);
+        decomposition_matrix_H = updated_H;
+        if (frobenius_norm_value < EPSILON)
+            break;
+        }
+    return decomposition_matrix_H;
+}
 
 int main(int argc, char **argv)
 {
@@ -250,7 +415,7 @@ int main(int argc, char **argv)
     cord_count = 0;
     vector_length = 1;
     flag = 0;
-    iter_limit = 200;
+    int iter_limit = 200;
     if (argc == 2)
     {
         k_arg = strtod(argv[1], &endptr1);
