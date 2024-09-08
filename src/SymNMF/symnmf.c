@@ -17,12 +17,11 @@ struct cluster *clusters = NULL;
 
 double calculate_squared_euclidean_distance(double *first_vector, double *second_vector)
 {
-    double sum_of_points;
     int i;
-    sum_of_points = 0.0;
-    for (i = 0 ; i < vector_length; i++)
+    double sum_of_points = 0.0;
+    for (i = 0 ; i < vectors_count; i++)
     {
-        sum_of_points += pow(first_vector[i]- second_vector[i], 2);
+        sum_of_points += pow(first_vector[i] - second_vector[i], 2);
     }
     return sum_of_points;
 }
@@ -260,28 +259,29 @@ double **initialize_H(double **normalized_similarity_matrix) {
     return decomposition_matrix;
 }
 
-void print_matrix(double** matrix)
+void print_matrix(double** matrix, int rows_count, int columns_count)
 {
     int i, j;
-    for (i = 0; i < vectors_count; i++)
+    printf("in print matrix \n");
+    for (i = 0; i < rows_count; i++)
     {
-        for (j = 0; j < vector_length - 1; j++)
+        for (j = 0; j < columns_count - 1; j++)
         {
             printf("%.4f,", matrix[i][j]);
         }
-        printf("%.4f\n", matrix[i][vector_length-1]);
+        printf("%.4f\n", matrix[i][columns_count-1]);
     }
 }
 
 double **calculate_similarity_matrix(){
     int i,j;
-    double **sym_matrix = (double**) calloc(sizeof(double*), vectors_count);
+    double **sym_matrix = (double**) calloc(vectors_count, sizeof(double*));
     if (sym_matrix == NULL) {
         printf(ERR_MSG);
         return NULL;
     }
     for (i = 0; i < vectors_count; i++){
-        sym_matrix[i] = (double *)calloc(sizeof(double), vectors_count);
+        sym_matrix[i] = (double *)calloc( vectors_count, sizeof(double));
         if (sym_matrix[i] == NULL)
         {
             free_memory_of_matrix(sym_matrix, i);
@@ -290,7 +290,7 @@ double **calculate_similarity_matrix(){
         }
         for (j = 0; j < vectors_count; j++){
             if(i == j){
-                sym_matrix[i][j] = 0;
+                sym_matrix[i][j] = 0.0;
             }
             else{
                 sym_matrix[i][j] = exp(-0.5 * calculate_squared_euclidean_distance(data_vectors[i], data_vectors[j])) ;
@@ -479,7 +479,7 @@ int main(int argc, char **argv){
         return 1;
     }
     char* file_name = argv[2];
-    char* operation= argv[1];
+    char* goal = argv[1];
     if(get_matrix_dimensions(file_name) ==1) {
         return 1;
     }
@@ -494,8 +494,9 @@ int main(int argc, char **argv){
         return 1;
     }
 
-    if(operation == "sym") {
-        print_matrix(sym_matrix);
+    if(goal == "sym") {
+        print_matrix(sym_matrix, vectors_count, vectors_count);
+
     }
     else {
         ddg_matrix = calculate_diagonal_degree_matrix(sym_matrix);
@@ -503,15 +504,15 @@ int main(int argc, char **argv){
             free_memory_of_matrix(sym_matrix, vectors_count);
             return 1;
         }
-        if(operation == "ddg") {
-            print_matrix(ddg_matrix);
+        if(goal == "ddg") {
+            print_matrix(ddg_matrix, vectors_count, vectors_count);
         }
-        else if(operation == "norm") {
+        else if(goal == "norm") {
             normalized_similarity_matrix = calculate_normalized_similarity_matrix(sym_matrix, ddg_matrix);
             if(normalized_similarity_matrix == NULL) {
                 return 1;
             }
-            print_matrix(normalized_similarity_matrix);
+            print_matrix(normalized_similarity_matrix, vectors_count, vectors_count);
             free_memory_of_matrix(normalized_similarity_matrix, vectors_count);
         }
         free_memory_of_matrix(ddg_matrix, vectors_count);

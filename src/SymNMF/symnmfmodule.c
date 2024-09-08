@@ -237,8 +237,3 @@ PyMODINIT_FUNC PyInit_symnmfmodule(void)
     }
     return m;
 }
-
-int main(int argc, char **argv)
-{
-    return 0;
-}

@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import math
 import symnmfmodule as c
+from tester import *
 np.random.seed(1234)
 
 
@@ -22,8 +23,7 @@ def initialize_decomposition_matrix_H(vectors_count, m, K):
 
 def read_input_file(file_name):
 	data_points = pd.read_csv(file_name, header=None)
-	data_points = data_points.iloc[:, 1:].to_numpy()
-	# data_points = data_points.to_numpy() # if first column isn't a key
+	data_points = data_points.to_numpy()
 	return data_points
 
 
@@ -35,27 +35,38 @@ def parse_arguments():
 
 
 def main():
+	print("started")
 	K, goal, file_name = parse_arguments()
-	try:
-		data_points = read_input_file(file_name)
-		vectors_count = len(data_points)
-		result_matrix = None
-		if goal == "symnmf":
-			normalized_similarity_matrix = c.norm(data_points.tolist(), vectors_count)
-			if normalized_similarity_matrix is None:
-				return
-			m = avg_W_entries(normalized_similarity_matrix, vectors_count)
-			result_matrix = c.symnmf(K, initialize_decomposition_matrix_H(vectors_count, m, K), normalized_similarity_matrix, vectors_count)
-		elif goal == "sym":
-			result_matrix = c.sym(data_points.tolist(), vectors_count)
-		elif goal == "ddg":
-			result_matrix = c.ddg(data_points.tolist(), vectors_count)
-		elif goal == "norm":
-			result_matrix = c.norm(data_points.tolist(), vectors_count)
-		if result_matrix is None:
+	# try:
+	data_points = read_input_file(file_name)
+	vectors_count = len(data_points)
+	result_matrix = None
+	print("printing data vectors in python")
+	for line in data_points:
+		print(",".join(str("%.4f" % element) for element in line))
+	if goal == "symnmf":
+		normalized_similarity_matrix = c.norm(data_points.tolist(), vectors_count)
+		if normalized_similarity_matrix is None:
 			return
-		else:
-			for line in result_matrix:
-				print(",".join(str("%.4f" % element) for element in line))
-	except Exception as e:
-		print("An Error Has Occurred")
+		m = avg_W_entries(normalized_similarity_matrix, vectors_count)
+		result_matrix = c.symnmf(K, initialize_decomposition_matrix_H(vectors_count, m, K), normalized_similarity_matrix, vectors_count)
+	elif goal == "sym":
+		result_matrix = c.sym(data_points.tolist(), vectors_count)
+	elif goal == "ddg":
+		result_matrix = c.ddg(data_points.tolist(), vectors_count)
+	elif goal == "norm":
+		result_matrix = c.norm(data_points.tolist(), vectors_count)
+	if result_matrix is None:
+		return
+	else:
+		print("printing result matrix received from C")
+		for line in result_matrix:
+			print(",".join(str("%.4f" % element) for element in line))
+		print("printing sym matrix from tester")
+		print_matrix(sym(data_points))
+	# except Exception as e:
+	# 	print("An Error Has Occurred")
+
+
+if __name__ == "__main__":
+	main()

@@ -56,6 +56,8 @@ double avg_W_entries(double ** normalized_similarity_matrix);
 
 double **initialize_H(double **normalized_similarity_matrix);
 
+void print_matrix(double** matrix, int rows_count, int columns_count);
+
 /*
  * Calculate and output the similarity matrix as described in 1.1.
  */
