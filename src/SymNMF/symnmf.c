@@ -262,7 +262,6 @@ double **initialize_H(double **normalized_similarity_matrix) {
 void print_matrix(double** matrix, int rows_count, int columns_count)
 {
     int i, j;
-    printf("in print matrix \n");
     for (i = 0; i < rows_count; i++)
     {
         for (j = 0; j < columns_count - 1; j++)
@@ -293,7 +292,7 @@ double **calculate_similarity_matrix(){
                 sym_matrix[i][j] = 0.0;
             }
             else{
-                sym_matrix[i][j] = exp(-0.5 * calculate_squared_euclidean_distance(data_vectors[i], data_vectors[j])) ;
+                sym_matrix[i][j] = exp(-0.5 * calculate_squared_euclidean_distance(data_vectors[i], data_vectors[j]));
             }
         }
     }
@@ -310,6 +309,7 @@ double **calculate_diagonal_degree_matrix(double **similarity_matrix)
         return NULL; }
     for(i = 0; i < vectors_count; i++){
         diagonal_degree_matrix[i] = (double *)calloc(sizeof(double), vectors_count);
+        i_row_sum = 0.0;
         if (diagonal_degree_matrix[i] == NULL)
         {
             free_memory_of_matrix(diagonal_degree_matrix, i);

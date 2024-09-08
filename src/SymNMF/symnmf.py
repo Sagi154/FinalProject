@@ -4,7 +4,7 @@ import numpy as np
 import math
 import symnmfmodule as c
 from tester import *
-np.random.seed(1234)
+# np.random.seed(1234)
 
 
 def avg_W_entries(normalized_similarity_matrix, vectors_count):
@@ -35,15 +35,13 @@ def parse_arguments():
 
 
 def main():
-	print("started")
 	K, goal, file_name = parse_arguments()
 	# try:
+	create_data_vectors(file_name, 20, 1)
 	data_points = read_input_file(file_name)
 	vectors_count = len(data_points)
 	result_matrix = None
-	print("printing data vectors in python")
-	for line in data_points:
-		print(",".join(str("%.4f" % element) for element in line))
+	expected = None
 	if goal == "symnmf":
 		normalized_similarity_matrix = c.norm(data_points.tolist(), vectors_count)
 		if normalized_similarity_matrix is None:
@@ -52,8 +50,10 @@ def main():
 		result_matrix = c.symnmf(K, initialize_decomposition_matrix_H(vectors_count, m, K), normalized_similarity_matrix, vectors_count)
 	elif goal == "sym":
 		result_matrix = c.sym(data_points.tolist(), vectors_count)
+		expected = sym(data_points)
 	elif goal == "ddg":
 		result_matrix = c.ddg(data_points.tolist(), vectors_count)
+		expected = ddg(data_points)
 	elif goal == "norm":
 		result_matrix = c.norm(data_points.tolist(), vectors_count)
 	if result_matrix is None:
@@ -62,8 +62,11 @@ def main():
 		print("printing result matrix received from C")
 		for line in result_matrix:
 			print(",".join(str("%.4f" % element) for element in line))
-		print("printing sym matrix from tester")
-		print_matrix(sym(data_points))
+		# print("printing expected matrix from tester")
+		# print_matrix(expected)
+		comparison = compare_results(expected, result_matrix)
+		print(f"Comparison: {comparison}")
+
 	# except Exception as e:
 	# 	print("An Error Has Occurred")
 
