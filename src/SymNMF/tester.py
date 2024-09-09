@@ -1,5 +1,6 @@
 import pandas as pd
 from scipy.spatial.distance import euclidean, pdist, squareform
+from scipy.sparse.csgraph import laplacian
 import numpy as np
 import pprint
 import math
@@ -18,8 +19,8 @@ def set_log_config():
 						level=logging.DEBUG)
 
 
-def create_data_vectors(file_name, n, bound):
-	data = [[np.random.uniform(-bound, bound) for j in range(n)] for i in range(n)]
+def create_data_vectors(file_name, vectors_count, vector_length, bound):
+	data = [[np.random.uniform(-bound, bound) for j in range(vector_length)] for i in range(vectors_count)]
 	data = np.array(data)
 	with open(file_name, 'w') as file:
 		for line in data:
@@ -76,13 +77,25 @@ def ddg(data_points):
 	return ddg_matrix
 
 
+def norm(data_points):
+	n = len(data_points)
+	sym_matrix = sym(data_points)
+	ddg_matrix = ddg(data_points)
+	ddg_inv_sqrt = [[1.0 / math.sqrt(ddg_matrix[i][j]) if ddg_matrix[i][j] != 0.0 else 0.0 for j in range(n)] for i in range(n)]
+	ddg_inv_sqrt = np.array(ddg_inv_sqrt)
+	norm_matrix = ddg_inv_sqrt @ sym_matrix
+	norm_matrix = norm_matrix @ ddg_inv_sqrt
+	return norm_matrix
+
+
 def main():
-	flag = True
+	flag = False
 	set_log_config()
-	n = 20
-	range = 1
+	n = 10
+	vector_len = 5
+	bound = 1
 	if flag:
-		create_data_vectors(FILE_NAME, n, range)
+		create_data_vectors(FILE_NAME, n, vector_len, bound)
 	data_points = read_input_file(FILE_NAME)
 	print("Data points:")
 	print_matrix(data_points)
@@ -91,6 +104,8 @@ def main():
 	print_matrix(sym_matrix)
 	print("call for ddg")
 	ddg_matrix = ddg(data_points)
+	print("call for norm")
+	print_matrix(norm(data_points))
 
 
 if __name__ == '__main__':

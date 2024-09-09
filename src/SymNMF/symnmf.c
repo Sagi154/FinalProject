@@ -11,7 +11,7 @@
 #define MAX_ITER 300
 
 
-int vectors_count, vector_length, K, failure;
+int vectors_count, vector_length, K;
 double **data_vectors;
 struct cluster *clusters = NULL;
 
@@ -19,7 +19,7 @@ double calculate_squared_euclidean_distance(double *first_vector, double *second
 {
     int i;
     double sum_of_points = 0.0;
-    for (i = 0 ; i < vectors_count; i++)
+    for (i = 0 ; i < vector_length; i++)
     {
         sum_of_points += pow(first_vector[i] - second_vector[i], 2);
     }
@@ -32,7 +32,7 @@ double calculate_frobenius_norm_squared(double **matrix, int rows_count, int col
     double sum = 0.0;
     for (i = 0; i < rows_count; i++) {
         for (j = 0; j < columns_count; j++) {
-            sum += matrix[i][j] * matrix[i][j];
+            sum += pow(fabs(matrix[i][j]), 2);
         }
     }
     return sum;
@@ -138,13 +138,13 @@ int is_double_integer(double value)
 
 double **calculate_inverse_square_root(double **diagonal_matrix) {
     int i;
-    double **inverse_square_root_matrix = (double **) calloc(sizeof(double *), vector_length);
+    double **inverse_square_root_matrix = (double **) calloc(sizeof(double *), vectors_count);
     if (inverse_square_root_matrix == NULL) {
         printf(ERR_MSG);
         return NULL;
     }
     for (i = 0; i < vectors_count; i++) {
-        inverse_square_root_matrix[i] = (double *)calloc(sizeof(double), vector_length);
+        inverse_square_root_matrix[i] = (double *)calloc(sizeof(double), vectors_count);
         if (inverse_square_root_matrix[i] == NULL)
         {
             free_memory_of_matrix(inverse_square_root_matrix, i);
@@ -308,7 +308,7 @@ double **calculate_diagonal_degree_matrix(double **similarity_matrix)
         printf(ERR_MSG);
         return NULL; }
     for(i = 0; i < vectors_count; i++){
-        diagonal_degree_matrix[i] = (double *)calloc(sizeof(double), vectors_count);
+        diagonal_degree_matrix[i] = (double *)calloc(vectors_count, sizeof(double));
         i_row_sum = 0.0;
         if (diagonal_degree_matrix[i] == NULL)
         {
@@ -352,37 +352,37 @@ double **calculate_final_decomposition_matrix_symnmf(double **decomposition_matr
     double frobenius_norm_value;
     double **matrix_WH, **matrix_H_transposed, **matrix_H_H_t, **matrix_H_Ht_H, **subtraction_matrix;
     double **updated_H;
-    iter_count = 0;
+    iter_count = 1;
     while (iter_count <= MAX_ITER) {
         int i,j;
-        iter_count++;
+        printf("decomposition_matrix_H at start of iter %d \n", iter_count);
+        print_matrix(decomposition_matrix_H, vectors_count, K);
         matrix_WH = multiply_matrices(normalized_similarity_matrix, decomposition_matrix_H, vectors_count, K, vectors_count);
         if (matrix_WH == NULL) {
-            printf(ERR_MSG);
             free_memory_of_matrix(decomposition_matrix_H, vectors_count);
             return NULL; }
-        matrix_H_transposed = transpose_matrix(decomposition_matrix_H, vectors_count, K);
+
+        matrix_H_transposed = transpose_matrix(decomposition_matrix_H, K, vectors_count);
         if (matrix_H_transposed == NULL) {
-            printf(ERR_MSG);
             free_memory_of_matrix(decomposition_matrix_H, vectors_count);
             free_memory_of_matrix(matrix_WH, vectors_count);
             return NULL; }
+        printf("matrix_H_transposed at start of iter %d \n", iter_count);
+        print_matrix(matrix_H_transposed, K, vectors_count);
         matrix_H_H_t = multiply_matrices(decomposition_matrix_H, matrix_H_transposed, vectors_count, vectors_count, K);
         if (matrix_H_H_t == NULL) {
-            printf(ERR_MSG);
             free_memory_of_matrix(decomposition_matrix_H, vectors_count);
             free_memory_of_matrix(matrix_WH, vectors_count);
-            free_memory_of_matrix(matrix_H_transposed, vectors_count);
+            free_memory_of_matrix(matrix_H_transposed, K);
             return NULL; }
         matrix_H_Ht_H = multiply_matrices(matrix_H_H_t, decomposition_matrix_H, vectors_count, K, vectors_count);
         if (matrix_H_Ht_H == NULL) {
-            printf(ERR_MSG);
             free_memory_of_matrix(decomposition_matrix_H, vectors_count);
             free_memory_of_matrix(matrix_WH, vectors_count);
-            free_memory_of_matrix(matrix_H_transposed, vectors_count);
+            free_memory_of_matrix(matrix_H_transposed, K);
             free_memory_of_matrix(matrix_H_H_t, vectors_count);
             return NULL; }
-        free_memory_of_matrix(matrix_H_transposed, vectors_count);
+        free_memory_of_matrix(matrix_H_transposed, K);
         free_memory_of_matrix(matrix_H_H_t, vectors_count);
         updated_H = (double**)calloc(vectors_count, sizeof(double*));
         if (updated_H == NULL) {
@@ -405,17 +405,28 @@ double **calculate_final_decomposition_matrix_symnmf(double **decomposition_matr
         free_memory_of_matrix(matrix_H_Ht_H, vectors_count);
         subtraction_matrix = matrices_subtraction(updated_H, decomposition_matrix_H , vectors_count , K);
         if (subtraction_matrix == NULL) {
-            printf(ERR_MSG);
             free_memory_of_matrix(decomposition_matrix_H, vectors_count);
             free_memory_of_matrix(updated_H, vectors_count);
             return NULL; }
+        printf("updated_H at end of iter %d \n", iter_count);
+        print_matrix(updated_H, vectors_count, K);
+        printf("decomposition_matrix_H at end of iter %d \n", iter_count);
+        print_matrix(decomposition_matrix_H, vectors_count, K);
+
+        printf("------------------------------\n");
+        // print_matrix(subtraction_matrix, vectors_count, K);
         frobenius_norm_value = calculate_frobenius_norm_squared(subtraction_matrix, vectors_count, K);
+        printf("frobenius norm %f at end of iter %d\n", frobenius_norm_value, iter_count);
         free_memory_of_matrix(subtraction_matrix, vectors_count);
         free_memory_of_matrix(decomposition_matrix_H, vectors_count);
         decomposition_matrix_H = updated_H;
+        printf("___________________________________________________________________\n");
         if (frobenius_norm_value < EPSILON)
             break;
-        }
+        iter_count++;
+    }
+
+    printf("----------iter count is: %d----------------\n", iter_count - 1);
     return decomposition_matrix_H;
 }
 
@@ -480,10 +491,10 @@ int main(int argc, char **argv){
     }
     char* file_name = argv[2];
     char* goal = argv[1];
-    if(get_matrix_dimensions(file_name) ==1) {
+    if(get_matrix_dimensions(file_name) == 1) {
         return 1;
     }
-    if(read_vectors(file_name) ==1) {
+    if(read_vectors(file_name) == 1) {
         return 1;
     }
     double** sym_matrix;

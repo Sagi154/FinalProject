@@ -3,6 +3,7 @@
 # include <math.h>
 
 extern int vectors_count;
+extern int vector_length;
 extern int K;
 extern double **data_vectors;
 
