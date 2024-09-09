@@ -9,7 +9,7 @@
 #define BETA 0.5
 #define EPSILON 0.0001
 #define MAX_ITER 300
-
+#define MAX_LINE_LENGTH 1024
 
 int vectors_count, vector_length, K;
 double **data_vectors;
@@ -435,41 +435,47 @@ int get_matrix_dimensions(FILE* vectors_file) {
     vector_length = 0;
     flag = 0;
 
-    while((c = fgetc(vectors_file)) != EOF) {
-        if(c == '\n') {
-            if(flag == 0) {
-                flag = 1;
-            }
-            vectors_count++;
+    char line[MAX_LINE_LENGTH];
+    if (fgets(line, MAX_LINE_LENGTH, vectors_file)) {
+        char *token = strtok(line, ",");
+        while (token != NULL) {
+        vector_length++;
+        token = strtok(NULL, ",");
         }
-        if(flag == 0 && (c == ',' || c == '\n')) {
-            vector_length++;
-        }
+    }
+    vectors_count++;
+    while(fgets(line, MAX_LINE_LENGTH, vectors_file)) {
+        vectors_count++;
     }
     rewind(vectors_file);
     return 0;
 }
 
-int read_vectors(char* file_name) {
-    int i,j;
-    FILE* vectors_file;
-    vectors_file = fopen(file_name, "r");
+int read_vectors(FILE* vectors_file) {
+    int j;
+    int i = 0;
+    char line[MAX_LINE_LENGTH];
 
     data_vectors = (double**) calloc(vectors_count, sizeof(double*));
     if(data_vectors == NULL) {
         printf(ERR_MSG);
         return 1;
     }
-    for(i = 0; i < vectors_count; i++) {
+    while(fgets(line, MAX_LINE_LENGTH, vectors_file)) {
         data_vectors[i] = (double*) calloc(vector_length, sizeof(double));
         if(data_vectors[i] == NULL) {
             printf(ERR_MSG);
             free_memory_of_matrix(data_vectors, i);
             return 1;
         }
+        char *token = strtok(line, ",");
         for(j = 0; j < vector_length; j++) {
-            fscanf(vectors_file, "%lf", &data_vectors[i][j]);
+            if(token != NULL) {
+                data_vectors[i][j] = atof(token);
+                token = strtok(NULL, ",");
+            }
         }
+        i++;
     }
     return 0;
 }
@@ -488,10 +494,8 @@ int main(int argc, char **argv){
         printf(ERR_MSG);
         return 1;
     }
-    if(get_matrix_dimensions(file_name) == 1) {
-        return 1;
-    }
-    if(read_vectors(file_name) == 1) {
+    get_matrix_dimensions(vectors_file);
+    if(read_vectors(vectors_file) != 0) {
         return 1;
     }
     fclose(vectors_file);
