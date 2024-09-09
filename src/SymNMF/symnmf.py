@@ -4,7 +4,7 @@ import numpy as np
 import math
 import symnmfmodule as c
 from tester import *
-np.random.seed(1234)
+# np.random.seed(1234)
 
 
 def avg_W_entries(normalized_similarity_matrix, vectors_count):
@@ -37,7 +37,7 @@ def parse_arguments():
 def main():
 	K, goal, file_name = parse_arguments()
 	# try:
-	# create_data_vectors(file_name, 4, 4, 2)
+	# create_data_vectors(file_name, 10, 6, 2)
 	data_points = read_input_file(file_name)
 	if data_points is None:
 		print("An Error Has Occurred")
@@ -70,8 +70,8 @@ def main():
 			print(",".join(str("%.4f" % element) for element in line))
 		# print("printing expected matrix from tester")
 		# print_matrix(expected)
-		# comparison = compare_results(expected, result_matrix)
-		# print(f"Comparison: {comparison}")
+		comparison = compare_results(expected, result_matrix)
+		print(f"Comparison: {comparison}")
 
 	# except Exception as e:
 	# 	print("An Error Has Occurred")

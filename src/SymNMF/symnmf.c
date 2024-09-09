@@ -478,7 +478,7 @@ int read_vectors(char* file_name) {
             return 1;
         }
         for(j = 0; j < vector_length; j++) {
-            fscanf(vectors_file, "%f", &data_vectors[i][j]);
+            fscanf(vectors_file, "%lf", &data_vectors[i][j]);
         }
         fclose(vectors_file);
     }
@@ -500,14 +500,15 @@ int main(int argc, char **argv){
     if(read_vectors(file_name) == 1) {
         return 1;
     }
+    printf("About to print data vectors: \n");
+    printf("Vectors count: %d, Vector length: %d \n", vectors_count, vector_length);
+    print_matrix(data_vectors, vectors_count, vector_length);
     sym_matrix = calculate_similarity_matrix();
     if(sym_matrix == NULL) {
         return 1;
     }
-
-    if(goal == "sym") {
+    if(strcmp(goal, "sym") == 0) {
         print_matrix(sym_matrix, vectors_count, vectors_count);
-
     }
     else {
         ddg_matrix = calculate_diagonal_degree_matrix(sym_matrix);
@@ -515,10 +516,10 @@ int main(int argc, char **argv){
             free_memory_of_matrix(sym_matrix, vectors_count);
             return 1;
         }
-        if(goal == "ddg") {
+        if(strcmp(goal, "ddg") == 0) {
             print_matrix(ddg_matrix, vectors_count, vectors_count);
         }
-        else if(goal == "norm") {
+        else if (strcmp(goal, "norm") == 0) {
             normalized_similarity_matrix = calculate_normalized_similarity_matrix(sym_matrix, ddg_matrix);
             if(normalized_similarity_matrix == NULL) {
                 return 1;
