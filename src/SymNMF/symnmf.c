@@ -428,18 +428,12 @@ double **calculate_final_decomposition_matrix_symnmf(double **decomposition_matr
 }
 
 
-int get_matrix_dimensions(char* file_name) {
+int get_matrix_dimensions(FILE* vectors_file) {
     char c;
     int flag;
-    FILE* vectors_file;
     vectors_count = 0;
     vector_length = 0;
     flag = 0;
-    vectors_file = fopen(file_name, "r");
-    if(vectors_file == NULL) {
-        printf(ERR_MSG);
-        return 1;
-    }
 
     while((c = fgetc(vectors_file)) != EOF) {
         if(c == '\n') {
@@ -448,12 +442,11 @@ int get_matrix_dimensions(char* file_name) {
             }
             vectors_count++;
         }
-        if(flag == 0) {
+        if(flag == 0 && (c == ',' || c == '\n')) {
             vector_length++;
         }
     }
     rewind(vectors_file);
-    fclose(vectors_file);
     return 0;
 }
 
@@ -461,10 +454,7 @@ int read_vectors(char* file_name) {
     int i,j;
     FILE* vectors_file;
     vectors_file = fopen(file_name, "r");
-    if(vectors_file == NULL) {
-        printf(ERR_MSG);
-        return 1;
-    }
+
     data_vectors = (double**) calloc(vectors_count, sizeof(double*));
     if(data_vectors == NULL) {
         printf(ERR_MSG);
@@ -480,7 +470,6 @@ int read_vectors(char* file_name) {
         for(j = 0; j < vector_length; j++) {
             fscanf(vectors_file, "%lf", &data_vectors[i][j]);
         }
-        fclose(vectors_file);
     }
     return 0;
 }
@@ -494,12 +483,18 @@ int main(int argc, char **argv){
     }
     file_name = argv[2];
     goal = argv[1];
+    FILE* vectors_file = fopen(file_name, "r");
+    if(vectors_file == NULL) {
+        printf(ERR_MSG);
+        return 1;
+    }
     if(get_matrix_dimensions(file_name) == 1) {
         return 1;
     }
     if(read_vectors(file_name) == 1) {
         return 1;
     }
+    fclose(vectors_file);
     printf("About to print data vectors: \n");
     printf("Vectors count: %d, Vector length: %d \n", vectors_count, vector_length);
     print_matrix(data_vectors, vectors_count, vector_length);
