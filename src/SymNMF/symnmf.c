@@ -429,13 +429,9 @@ double **calculate_final_decomposition_matrix_symnmf(double **decomposition_matr
 
 
 int get_matrix_dimensions(FILE* vectors_file) {
-    char c;
-    int flag;
+    char line[MAX_LINE_LENGTH];
     vectors_count = 0;
     vector_length = 0;
-    flag = 0;
-
-    char line[MAX_LINE_LENGTH];
     if (fgets(line, MAX_LINE_LENGTH, vectors_file)) {
         char *token = strtok(line, ",");
         while (token != NULL) {
@@ -452,10 +448,10 @@ int get_matrix_dimensions(FILE* vectors_file) {
 }
 
 int read_vectors(FILE* vectors_file) {
-    int j;
-    int i = 0;
+    int j, i;
     char line[MAX_LINE_LENGTH];
-
+    char *token;
+    i = 0;
     data_vectors = (double**) calloc(vectors_count, sizeof(double*));
     if(data_vectors == NULL) {
         printf(ERR_MSG);
@@ -468,7 +464,7 @@ int read_vectors(FILE* vectors_file) {
             free_memory_of_matrix(data_vectors, i);
             return 1;
         }
-        char *token = strtok(line, ",");
+        token = strtok(line, ",");
         for(j = 0; j < vector_length; j++) {
             if(token != NULL) {
                 data_vectors[i][j] = atof(token);
@@ -481,6 +477,7 @@ int read_vectors(FILE* vectors_file) {
 }
 
 int main(int argc, char **argv){
+    FILE* vectors_file;
     char *file_name, *goal;
     double **sym_matrix, **ddg_matrix, **normalized_similarity_matrix;
     if (argc != 3) {
@@ -489,7 +486,7 @@ int main(int argc, char **argv){
     }
     file_name = argv[2];
     goal = argv[1];
-    FILE* vectors_file = fopen(file_name, "r");
+    vectors_file = fopen(file_name, "r");
     if(vectors_file == NULL) {
         printf(ERR_MSG);
         return 1;
