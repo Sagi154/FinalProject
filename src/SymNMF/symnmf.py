@@ -9,6 +9,7 @@ from tester import *
 
 def avg_W_entries(normalized_similarity_matrix, vectors_count):
 	total_matrix_sum = 0
+	# total_matrix_sum = np.sum(np.array(normalized_similarity_matrix))
 	for line in normalized_similarity_matrix:
 		for element in line:
 			total_matrix_sum += element
@@ -42,8 +43,7 @@ def main():
 	if data_points is None:
 		print("An Error Has Occurred")
 		return
-	vectors_count = len(data_points)
-	vector_length = len(data_points[0])
+	vectors_count, vector_length = len(data_points), len(data_points[0])
 	result_matrix = None
 	expected = None
 	if goal == "symnmf":

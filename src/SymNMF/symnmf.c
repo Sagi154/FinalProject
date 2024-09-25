@@ -354,8 +354,7 @@ double **calculate_normalized_similarity_matrix(double** diagonal_degree_matrix 
 double **calculate_final_decomposition_matrix_symnmf(double **decomposition_matrix_H, double **normalized_similarity_matrix) {
     int iter_count;
     double frobenius_norm_value;
-    double **matrix_WH, **matrix_H_transposed, **matrix_H_H_t, **matrix_H_Ht_H, **subtraction_matrix;
-    double **updated_H;
+    double **matrix_WH, **matrix_H_transposed, **matrix_H_H_t, **matrix_H_Ht_H, **subtraction_matrix, **updated_H;
     iter_count = 1;
     while (iter_count <= MAX_ITER) {
         int i,j;
@@ -423,7 +422,6 @@ double **calculate_final_decomposition_matrix_symnmf(double **decomposition_matr
             break;
         iter_count++;
     }
-
     return decomposition_matrix_H;
 }
 
@@ -496,9 +494,6 @@ int main(int argc, char **argv){
         return 1;
     }
     fclose(vectors_file);
-    printf("About to print data vectors: \n");
-    printf("Vectors count: %d, Vector length: %d \n", vectors_count, vector_length);
-    print_matrix(data_vectors, vectors_count, vector_length);
     sym_matrix = calculate_similarity_matrix();
     if(sym_matrix == NULL) {
         return 1;

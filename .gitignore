@@ -1,3 +1,8 @@
 .idea
 CMakeLists.txt
 cmake-build-debug/
+__pycache__/
+build/
+my_logs.log
+symnmfmodule.cp311-win_amd64.pyd
+
