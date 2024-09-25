@@ -210,7 +210,7 @@ def main():
             return
         K = int(float(K))
         iter_limit = int(float(iter_limit))
-        centroids = k_means_algorithm(vectors, K, iter_limit)
+        lables, centroids = k_means_algorithm(vectors, K, iter_limit)
         for i, centroid in enumerate(centroids):
             print(",".join(str(element) for element in centroid))
     except Exception as e:
