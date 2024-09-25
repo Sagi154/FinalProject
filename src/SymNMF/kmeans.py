@@ -110,16 +110,19 @@ def k_means_algorithm(vectors, K, iter_limit=200):
     """
     Initialize starting K clusters
     """
+    labels = [-1] * len(vectors)
     iter_number = 0
     flag = False
     while iter_number <= iter_limit and not flag:
         iter_number += 1
-        for xi in vectors:
+        for i in range(len(vectors)):
+            xi = vectors[i]
             """
             Assign every xi to the closest cluster k
             """
             min_cluster, min_cluster_index = calculate_closest_cluster(clusters, xi)
             min_cluster.add_xi(xi)
+            labels[i] = min_cluster_index
         flag = True
         # Update centroids
         for cluster in clusters:
@@ -136,7 +139,40 @@ def k_means_algorithm(vectors, K, iter_limit=200):
     for cluster in clusters:
         cluster.set_centroid(["%.4f" % xi for xi in cluster.get_centroid()])
     centroids = [cluster.get_centroid() for cluster in clusters]
-    return centroids
+    return labels, centroids
+
+#def k_means_algorithm(vectors, K, iter_limit=200):
+    # clusters = initialize_centroids(vectors, K)
+    #    """
+    #    Initialize starting K clusters
+    #   """
+    #    iter_number = 0
+    #    flag = False
+    #    while iter_number <= iter_limit and not flag:
+    #        iter_number += 1
+    #        for xi in vectors:
+    #            """
+    #            Assign every xi to the closest cluster k
+    #            """
+    #            min_cluster, min_cluster_index = calculate_closest_cluster(clusters, xi)
+    #            min_cluster.add_xi(xi)
+    #        flag = True
+    #        # Update centroids
+    #        for cluster in clusters:
+    #            """
+    #        Update the centroids and check for convergence
+    #        """
+    #       prev_cluster_centroid = cluster.get_centroid()
+    #       cluster.update_centroid()
+    #        if flag:
+    #            convergence = cluster.calculate_euclidean_distance(prev_cluster_centroid)
+    #            if convergence >= EPSILON:
+    #                flag = False
+    #        cluster.reset_sum_and_size()
+    #for cluster in clusters:
+    #    cluster.set_centroid(["%.4f" % xi for xi in cluster.get_centroid()])
+    #centroids = [cluster.get_centroid() for cluster in clusters]
+#return centroids
 
 
 def calculate_closest_cluster(clusters, vect_xi):
