@@ -4,7 +4,7 @@ import numpy as np
 import math
 import symnmfmodule as c
 from tester import *
-np.random.seed(1234)
+# np.random.seed(1234)
 
 def initialize_decomposition_matrix_H(vectors_count, m, K):
 	"""
@@ -54,20 +54,20 @@ def perform_goal(data_points, vectors_count, vector_length, K, goal):
 	result_matrix = None
 	expected = None
 	if goal == "symnmf":
-		normalized_similarity_matrix = c.norm(data_points, vectors_count, vector_length)
+		normalized_similarity_matrix = c.norm(data_points)
 		if normalized_similarity_matrix is None:
 			return
 		m = np.mean(normalized_similarity_matrix)
 		initial_H = initialize_decomposition_matrix_H(vectors_count, m, K)
 		result_matrix = c.symnmf(K, initial_H, normalized_similarity_matrix, vectors_count)
 	elif goal == "sym":
-		result_matrix = c.sym(data_points, vectors_count, vector_length)
+		result_matrix = c.sym(data_points)
 		expected = sym(data_points)
 	elif goal == "ddg":
-		result_matrix = c.ddg(data_points, vectors_count, vector_length)
+		result_matrix = c.ddg(data_points)
 		expected = ddg(data_points)
 	elif goal == "norm":
-		result_matrix = c.norm(data_points, vectors_count, vector_length)
+		result_matrix = c.norm(data_points)
 		expected = norm(data_points)
 	return result_matrix, expected
 
@@ -78,7 +78,7 @@ def main():
 	"""
 	K, goal, file_name = parse_arguments()
 	try:
-		# create_data_vectors(file_name, 10, 6, 2)
+		create_data_vectors(file_name, 10, 6, 2)
 		data_points = read_input_file(file_name)
 		if data_points is None:
 			print("An Error Has Occurred")

@@ -68,18 +68,25 @@ PyObject *transform_c_matrix_to_python_matrix(double **c_matrix, int rows_count,
 
 
 static PyObject* sym(PyObject *self, PyObject *args) {
-    PyObject *lst_data_points, *python_sym_matrix;
+    PyObject *lst_data_points, *python_sym_matrix, *first_vector;
+    Py_ssize_t p_vectors_count, p_vector_length;
     double **sym_matrix;
-    if(!PyArg_ParseTuple(args, "Oii", &lst_data_points, &vectors_count, &vector_length))
-    {
+    if(!PyArg_ParseTuple(args, "O!", &PyList_Type, &lst_data_points)) {
         return NULL; /* In the CPython API, a NULL value is never valid for a
                         PyObject* so it is used to signal that an error has occurred. */
     }
+    first_vector = PyList_GetItem(lst_data_points, 0);
+    if(!first_vector || !PyList_Check(first_vector))
+        return NULL;
+    p_vectors_count = PyList_Size(lst_data_points);
+    p_vector_length = PyList_Size(first_vector);
+    if (p_vectors_count < 0 || p_vector_length < 0)
+        return NULL;
+    vectors_count = (int)p_vectors_count;
+    vector_length = (int)p_vector_length;
     data_vectors = transform_python_matrix_to_c_matrix(lst_data_points, vectors_count, vector_length);
     if (data_vectors == NULL)
-    {
         return NULL;
-    }
     sym_matrix = calculate_similarity_matrix();
     free_memory_of_matrix(data_vectors, vectors_count);
     if (sym_matrix == NULL) {
@@ -92,28 +99,33 @@ static PyObject* sym(PyObject *self, PyObject *args) {
 
 
 static PyObject* ddg(PyObject *self, PyObject *args) {
-    PyObject *lst_data_points, *python_ddg_matrix;
+    PyObject *lst_data_points, *python_ddg_matrix, *first_vector;
+    Py_ssize_t p_vectors_count, p_vector_length;
     double **sym_matrix, **ddg_matrix;
-    if(!PyArg_ParseTuple(args, "Oii", &lst_data_points, &vectors_count, &vector_length))
-    {
+    if(!PyArg_ParseTuple(args, "O!", &PyList_Type, &lst_data_points)) {
         return NULL; /* In the CPython API, a NULL value is never valid for a
                         PyObject* so it is used to signal that an error has occurred. */
     }
+    first_vector = PyList_GetItem(lst_data_points, 0);
+    if(!first_vector || !PyList_Check(first_vector))
+        return NULL;
+    p_vectors_count = PyList_Size(lst_data_points);
+    p_vector_length = PyList_Size(first_vector);
+    if (p_vectors_count < 0 || p_vector_length < 0)
+        return NULL;
+    vectors_count = (int)p_vectors_count;
+    vector_length = (int)p_vector_length;
     data_vectors = transform_python_matrix_to_c_matrix(lst_data_points, vectors_count, vector_length);
     if (data_vectors == NULL)
-    {
         return NULL;
-    }
     sym_matrix = calculate_similarity_matrix();
     free_memory_of_matrix(data_vectors, vectors_count);
-    if (sym_matrix == NULL) {
+    if (sym_matrix == NULL)
         return NULL;
-    }
     ddg_matrix = calculate_diagonal_degree_matrix(sym_matrix);
     free_memory_of_matrix(sym_matrix, vectors_count);
-    if (ddg_matrix == NULL) {
+    if (ddg_matrix == NULL)
         return NULL;
-    }
     python_ddg_matrix = transform_c_matrix_to_python_matrix(ddg_matrix, vectors_count, vectors_count);
     free_memory_of_matrix(ddg_matrix, vectors_count);
     return python_ddg_matrix;
@@ -121,23 +133,29 @@ static PyObject* ddg(PyObject *self, PyObject *args) {
 
 
 static PyObject* norm(PyObject *self, PyObject *args) {
-    PyObject *lst_data_points, *python_norm_matrix;
+    PyObject *lst_data_points, *python_norm_matrix, *first_vector;
     double **sym_matrix, **ddg_matrix, **norm_matrix;
-    if(!PyArg_ParseTuple(args, "Oii", &lst_data_points, &vectors_count, &vector_length))
-    {
+    Py_ssize_t p_vectors_count, p_vector_length;
+    if(!PyArg_ParseTuple(args, "O!", &PyList_Type, &lst_data_points)) {
         return NULL; /* In the CPython API, a NULL value is never valid for a
                         PyObject* so it is used to signal that an error has occurred. */
     }
+    first_vector = PyList_GetItem(lst_data_points, 0);
+    if(!first_vector || !PyList_Check(first_vector))
+        return NULL;
+    p_vectors_count = PyList_Size(lst_data_points);
+    p_vector_length = PyList_Size(first_vector);
+    if (p_vectors_count < 0 || p_vector_length < 0)
+        return NULL;
+    vectors_count = (int)p_vectors_count;
+    vector_length = (int)p_vector_length;
     data_vectors = transform_python_matrix_to_c_matrix(lst_data_points, vectors_count, vector_length);
     if (data_vectors == NULL)
-    {
         return NULL;
-    }
     sym_matrix = calculate_similarity_matrix();
     free_memory_of_matrix(data_vectors, vectors_count);
-    if (sym_matrix == NULL) {
+    if (sym_matrix == NULL)
         return NULL;
-    }
     ddg_matrix = calculate_diagonal_degree_matrix(sym_matrix);
     if (ddg_matrix == NULL) {
         free_memory_of_matrix(sym_matrix, vectors_count);
@@ -146,9 +164,8 @@ static PyObject* norm(PyObject *self, PyObject *args) {
     norm_matrix = calculate_normalized_similarity_matrix(ddg_matrix, sym_matrix);
     free_memory_of_matrix(sym_matrix, vectors_count);
     free_memory_of_matrix(ddg_matrix, vectors_count);
-    if (norm_matrix == NULL) {
+    if (norm_matrix == NULL)
         return NULL;
-    }
     python_norm_matrix = transform_c_matrix_to_python_matrix(norm_matrix, vectors_count, vectors_count);
     free_memory_of_matrix(norm_matrix, vectors_count);
     return python_norm_matrix;
