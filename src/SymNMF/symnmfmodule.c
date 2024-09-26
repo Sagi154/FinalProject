@@ -13,21 +13,16 @@ double **transform_python_matrix_to_c_matrix(PyObject *lst_matrix, int rows_coun
 {
     int i, j;
     double value;
-    PyObject* item;
-    PyObject* vect;
+    PyObject *item, *vect;
     double **c_matrix;
     c_matrix = (double**)calloc(rows_count, sizeof(double*));
-    if (c_matrix == NULL)
-    {
-        printf(ERR_MSG);
+    if (c_matrix == NULL) {
         return NULL;
     }
     for (i = 0; i < vectors_count; i++)
     {
         c_matrix[i] = (double *)calloc(columns_count, sizeof(double));
-        if (c_matrix[i] == NULL)
-        {
-            printf(ERR_MSG);
+        if (c_matrix[i] == NULL) {
             free_memory_of_matrix(c_matrix, i);
             return NULL;
         }
@@ -42,13 +37,12 @@ double **transform_python_matrix_to_c_matrix(PyObject *lst_matrix, int rows_coun
     return c_matrix;
 }
 
+
 PyObject *transform_c_matrix_to_python_matrix(double **c_matrix, int rows_count, int columns_count) {
     int i, j;
-    PyObject *python_matrix, *vector_i;
-    PyObject *item_j;
+    PyObject *python_matrix, *vector_i, *item_j;
     python_matrix = PyList_New(rows_count);
     if (python_matrix == NULL) {
-        printf(ERR_MSG);
         return NULL;
     }
     for (i = 0; i < rows_count; i++)
@@ -56,7 +50,6 @@ PyObject *transform_c_matrix_to_python_matrix(double **c_matrix, int rows_count,
         vector_i =  PyList_New(columns_count);
         if (!PyList_Check(vector_i))
         {
-            printf(ERR_MSG);
             return NULL;
         }
         for (j = 0; j < columns_count; j++)
@@ -64,7 +57,6 @@ PyObject *transform_c_matrix_to_python_matrix(double **c_matrix, int rows_count,
             item_j = Py_BuildValue("d", c_matrix[i][j]);
             if (!item_j)
             {
-                printf(ERR_MSG);
                 return NULL;
             }
             PyList_SetItem(vector_i, j, item_j);
@@ -75,14 +67,11 @@ PyObject *transform_c_matrix_to_python_matrix(double **c_matrix, int rows_count,
 }
 
 
-
 static PyObject* sym(PyObject *self, PyObject *args) {
-    PyObject *lst_data_points;
+    PyObject *lst_data_points, *python_sym_matrix;
     double **sym_matrix;
-    PyObject* python_sym_matrix;
     if(!PyArg_ParseTuple(args, "Oii", &lst_data_points, &vectors_count, &vector_length))
     {
-        printf(ERR_MSG);
         return NULL; /* In the CPython API, a NULL value is never valid for a
                         PyObject* so it is used to signal that an error has occurred. */
     }
@@ -101,13 +90,12 @@ static PyObject* sym(PyObject *self, PyObject *args) {
     return python_sym_matrix;
 }
 
+
 static PyObject* ddg(PyObject *self, PyObject *args) {
-    PyObject *lst_data_points;
+    PyObject *lst_data_points, *python_ddg_matrix;
     double **sym_matrix, **ddg_matrix;
-    PyObject* python_ddg_matrix;
     if(!PyArg_ParseTuple(args, "Oii", &lst_data_points, &vectors_count, &vector_length))
     {
-        printf(ERR_MSG);
         return NULL; /* In the CPython API, a NULL value is never valid for a
                         PyObject* so it is used to signal that an error has occurred. */
     }
@@ -131,13 +119,12 @@ static PyObject* ddg(PyObject *self, PyObject *args) {
     return python_ddg_matrix;
 }
 
+
 static PyObject* norm(PyObject *self, PyObject *args) {
-    PyObject *lst_data_points;
+    PyObject *lst_data_points, *python_norm_matrix;
     double **sym_matrix, **ddg_matrix, **norm_matrix;
-    PyObject* python_norm_matrix;
     if(!PyArg_ParseTuple(args, "Oii", &lst_data_points, &vectors_count, &vector_length))
     {
-        printf(ERR_MSG);
         return NULL; /* In the CPython API, a NULL value is never valid for a
                         PyObject* so it is used to signal that an error has occurred. */
     }
@@ -167,14 +154,12 @@ static PyObject* norm(PyObject *self, PyObject *args) {
     return python_norm_matrix;
 }
 
+
 static PyObject* symnmf(PyObject *self, PyObject *args) {
-    PyObject *lst_decomposition_matrix_H, *lst_norm_matrix;
-    double **initial_decomposition_matrix_H, **norm_matrix;
-    double **decomposition_matrix_H;
-    PyObject* python_optimal_decomposition_matrix;
+    PyObject *lst_decomposition_matrix_H, *lst_norm_matrix, *python_optimal_decomposition_matrix;
+    double **initial_decomposition_matrix_H, **norm_matrix, **decomposition_matrix_H;
     if(!PyArg_ParseTuple(args, "iOOi", &K, &lst_decomposition_matrix_H, &lst_norm_matrix, &vectors_count))
     {
-        printf(ERR_MSG);
         return NULL; /* In the CPython API, a NULL value is never valid for a
                         PyObject* so it is used to signal that an error has occurred. */
     }
@@ -199,6 +184,7 @@ static PyObject* symnmf(PyObject *self, PyObject *args) {
     return python_optimal_decomposition_matrix;
 }
 
+
 static PyMethodDef symnmfMethods[] = {
     {"sym", (PyCFunction) sym, METH_VARARGS, PyDoc_STR("Calculate and output the similarity matrix")},
     {"ddg", (PyCFunction) ddg, METH_VARARGS, PyDoc_STR("Calculate and output the Diagonal Degree Matrix")},
@@ -207,6 +193,7 @@ static PyMethodDef symnmfMethods[] = {
     {NULL, NULL, 0, NULL}
 };
 
+
 static struct PyModuleDef symnmf_module = {
     PyModuleDef_HEAD_INIT,
     "symnmfmodule",
@@ -214,6 +201,7 @@ static struct PyModuleDef symnmf_module = {
     -1,
     symnmfMethods
 };
+
 
 PyMODINIT_FUNC PyInit_symnmfmodule(void)
 {

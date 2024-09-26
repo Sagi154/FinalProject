@@ -1,7 +1,7 @@
 import math
 import sys
 
-EPSILON = 0.001
+EPSILON = 0.0001
 
 
 class Cluster:

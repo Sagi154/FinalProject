@@ -8,6 +8,7 @@ pandas = "*"
 numpy = "*"
 setuptools = "*"
 scipy = "*"
+scikit-learn = "*"
 
 [dev-packages]
 

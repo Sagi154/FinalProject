@@ -4,53 +4,60 @@ import numpy as np
 import math
 import symnmfmodule as c
 from tester import *
-# np.random.seed(1234)
-
-
-def avg_W_entries(normalized_similarity_matrix, vectors_count):
-	total_matrix_sum = 0
-	# total_matrix_sum = np.sum(np.array(normalized_similarity_matrix))
-	for line in normalized_similarity_matrix:
-		for element in line:
-			total_matrix_sum += element
-	return total_matrix_sum / (vectors_count * vectors_count)
-
+np.random.seed(1234)
 
 def initialize_decomposition_matrix_H(vectors_count, m, K):
+	"""
+	Performing step 1.4.1 of the algorithm.
+	:param Vectors_count: Number of vectors in the data set.
+	:param m: The mean of all entries of W.
+	:param K: Number of clusters.
+	:return: Initial decomposition matrix.
+	"""
 	# Upper bound not tight
 	decomposition_matrix = [[np.random.uniform(low=0, high=(2 * math.sqrt(m/K) + 1e-10)) for j in range(K)] for i in range(vectors_count)]
 	return decomposition_matrix
 
 
 def read_input_file(file_name):
+	"""
+	Load dataset from a .txt file
+	:param file_name: The name of the .txt file.
+	:return: A numpy array representing the data.
+	"""
 	data_points = pd.read_csv(file_name, header=None)
 	data_points = data_points.to_numpy()
 	return data_points.tolist()
 
 
 def parse_arguments():
+	"""
+	Parsing the arguments from the command line.
+	:return: K, goal and file name variables.
+	"""
 	K = int(float(sys.argv[1]))
 	goal = sys.argv[2]
 	file_name = sys.argv[3]
 	return K, goal, file_name
 
 
-def main():
-	K, goal, file_name = parse_arguments()
-	# try:
-	# create_data_vectors(file_name, 10, 6, 2)
-	data_points = read_input_file(file_name)
-	if data_points is None:
-		print("An Error Has Occurred")
-		return
-	vectors_count, vector_length = len(data_points), len(data_points[0])
+def perform_goal(data_points, vectors_count, vector_length, K, goal):
+	"""
+	Performs the required goal
+	:param data_points: A numpy array representing the data vectors.
+	:param vectors_count: Number of vectors in the data.
+	:param vector_length: Length of the vectors.
+	:param K: Number of clusters.
+	:param goal: Goal client wants to perform.
+	:return: result matrix of said goal.
+	"""
 	result_matrix = None
 	expected = None
 	if goal == "symnmf":
 		normalized_similarity_matrix = c.norm(data_points, vectors_count, vector_length)
 		if normalized_similarity_matrix is None:
 			return
-		m = avg_W_entries(normalized_similarity_matrix, vectors_count)
+		m = np.mean(normalized_similarity_matrix)
 		initial_H = initialize_decomposition_matrix_H(vectors_count, m, K)
 		result_matrix = c.symnmf(K, initial_H, normalized_similarity_matrix, vectors_count)
 	elif goal == "sym":
@@ -62,19 +69,35 @@ def main():
 	elif goal == "norm":
 		result_matrix = c.norm(data_points, vectors_count, vector_length)
 		expected = norm(data_points)
-	if result_matrix is None:
-		return
-	else:
-		print("printing result matrix received from C")
-		for line in result_matrix:
-			print(",".join(str("%.4f" % element) for element in line))
-		# print("printing expected matrix from tester")
-		# print_matrix(expected)
-		comparison = compare_results(expected, result_matrix)
-		print(f"Comparison: {comparison}")
+	return result_matrix, expected
 
-	# except Exception as e:
-	# 	print("An Error Has Occurred")
+
+def main():
+	"""
+	Main function
+	"""
+	K, goal, file_name = parse_arguments()
+	try:
+		# create_data_vectors(file_name, 10, 6, 2)
+		data_points = read_input_file(file_name)
+		if data_points is None:
+			print("An Error Has Occurred")
+			return
+		vectors_count, vector_length = len(data_points), len(data_points[0])
+		result_matrix, expected = perform_goal(data_points, vectors_count, vector_length, K, goal)
+		if result_matrix is None:
+			print("An Error Has Occurred")
+			return
+		else:
+			print("printing result matrix received from C")
+			for line in result_matrix:
+				print(",".join(str("%.4f" % element) for element in line))
+			# print("printing expected matrix from tester")
+			# print_matrix(expected)
+			comparison = compare_results(expected, result_matrix)
+			print(f"Comparison: {comparison}")
+	except Exception as e:
+		print("An Error Has Occurred")
 
 
 if __name__ == "__main__":
