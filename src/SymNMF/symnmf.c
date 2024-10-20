@@ -52,9 +52,6 @@ void copy_vector_by_cord(double *copy_from, double *copy_to)
 
 void free_memory_of_matrix(double **matrix, int numb_of_rows)
 {
-    // numb_of_rows- the number of rows that the matrix has or the number of rows created before failing
-    // the method delete the rows' arrays one by one starting from the last row (numb_of_rows), and then delete the
-    // array of the rows
     int i;
     for(i = 0; i < numb_of_rows; i++)
     {
@@ -233,7 +230,7 @@ double **calculate_diagonal_degree_matrix(double **similarity_matrix)
     return diagonal_degree_matrix;
 }
 
-double **calculate_normalized_similarity_matrix(double** diagonal_degree_matrix , double** sym_matrix){
+double **calculate_normalized_similarity_matrix(double **diagonal_degree_matrix , double **sym_matrix){
     double **inverse_square_root_matrix, **graph_Laplacian_left, **graph_Laplacian;
     // calculate the inverse square root matrix of the diagonal degree matrix that received
     inverse_square_root_matrix = calculate_inverse_square_root(diagonal_degree_matrix);
