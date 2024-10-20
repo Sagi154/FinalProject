@@ -20,10 +20,10 @@ extern double **data_vectors;
  * This function frees each (successfully created) row of the matrix individually,
  * and then frees the matrix itself.
  * @param matrix A pointer to the matrix (double**) whose memory is to be freed.
- * @param numb_of_rows The number of rows to free, corresponding to the number of successfully created rows.
+ * @param number_of_rows The number of rows to free, corresponding to the number of successfully created rows.
  * @return None
  */
-void free_memory_of_matrix(double **matrix, int numb_of_rows);
+void free_memory_of_matrix(double **matrix, int number_of_rows);
 
 /**
  * @brief Calculates the similarity matrix.
