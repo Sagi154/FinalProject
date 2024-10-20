@@ -134,9 +134,7 @@ def k_means_algorithm(vectors, K, iter_limit=300):
     :return: A list of the assignment of all vectors to their cluster and a list of final centroids.
     """
     clusters = initialize_centroids(vectors, K)
-    """
-    Initialize starting K clusters
-    """
+    """ Initialize starting K clusters """
     labels = [-1] * len(vectors)
     iter_number = 0
     flag = False
@@ -144,18 +142,14 @@ def k_means_algorithm(vectors, K, iter_limit=300):
         iter_number += 1
         for i in range(len(vectors)):
             xi = vectors[i]
-            """
-            Assign every xi to the closest cluster k
-            """
+            """ Assign every xi to the closest cluster k """
             min_cluster, min_cluster_index = calculate_closest_cluster(clusters, xi)
             min_cluster.add_xi(xi)
             labels[i] = min_cluster_index
         flag = True
-        # Update centroids
+        """ Update centroids """
         for cluster in clusters:
-            """
-            Update the centroids and check for convergence
-            """
+            """ Update the centroids and check for convergence """
             prev_cluster_centroid = cluster.get_centroid()
             cluster.update_centroid()
             if flag:
