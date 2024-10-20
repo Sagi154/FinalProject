@@ -10,7 +10,14 @@ EPSILON = 0.0001
 
 
 class Cluster:
+    """
+    A class to represent a cluster from HW1
+    """
     def __init__(self, centroid: list):
+        """
+        Initialize a new cluster
+        :param centroid: the centroid of the cluster
+        """
         self.sum: list = [0.0 for i in range(len(centroid))]
         """
         sum of vector's coordinates
@@ -22,12 +29,21 @@ class Cluster:
         """
 
     def get_size(self):
+        """
+        Get the size of the cluster
+        """
         return self.size
 
     def get_sum(self):
+        """
+        Get the sum of values in the cluster
+        """
         return self.sum
 
     def get_centroid(self):
+        """
+        Get the centroid of the cluster
+        """
         return self.centroid
 
     def set_size(self, new_size):
@@ -37,11 +53,18 @@ class Cluster:
         self.sum = new_sum
 
     def add_xi(self, vect_xi):
+        """
+        Add a vector to the cluster
+        :param vect_xi: The vector to add.
+        """
         for i in range(len(vect_xi)):
             self.sum[i] += vect_xi[i]
         self.size += 1
 
     def update_centroid(self):
+        """
+        Update to the new centroid of the cluster
+        """
         new_centroid = [0 for i in range(len(self.centroid))]
         for i in range(len(self.sum)):
             new_centroid[i] = float(self.sum[i]) / self.size
@@ -51,10 +74,18 @@ class Cluster:
         self.centroid = new_centroid
 
     def reset_sum_and_size(self):
+        """
+        Reset cluster's sum and size for a new loop.
+        """
         self.sum = [0 for i in range(len(self.centroid))]
         self.size = 0
 
     def calculate_euclidean_distance(self, vect_xi):
+        """
+        Calculate euclidean distance between a new vector and the cluster's centroid
+        :param vect_xi: The vector we wish to calculate the euclidean distance from the cluster's centroid.
+        :return:
+        """
         sum = 0
         for i in range(len(vect_xi)):
             sum += math.pow(vect_xi[i] - self.centroid[i], 2)
@@ -65,11 +96,23 @@ class Cluster:
 
 
 def initialize_centroids(vect_arr, K):
+    """
+    Initialize all clusters with K initial vectors from data points as centroids.
+    :param vect_arr: The data points
+    :param K: Number of clusters.
+    :return: The initialized clusters
+    """
     clusters = [Cluster(vect_arr[i]) for i in range(K)]
     return clusters
 
 
 def calculate_closest_cluster(clusters, vect_xi):
+    """
+    Calculate the closest cluster to the given vector.
+    :param clusters: The list of clusters.
+    :param vect_xi: The vector we're working with.
+    :return: The cluster closest to the given vector and its index.
+    """
     min_eucledian_distance = sys.maxsize
     min_cluster = None
     min_cluster_index = 0
@@ -82,7 +125,14 @@ def calculate_closest_cluster(clusters, vect_xi):
     return min_cluster, min_cluster_index
 
 
-def k_means_algorithm(vectors, K, iter_limit=200):
+def k_means_algorithm(vectors, K, iter_limit=300):
+    """
+    Runs the K-Means algorithm from HW1.
+    :param vectors: Data points.
+    :param K: Number of clusters.
+    :param iter_limit: The maximum number of iterations
+    :return: A list of the assignment of all vectors to their cluster and a list of final centroids.
+    """
     clusters = initialize_centroids(vectors, K)
     """
     Initialize starting K clusters
@@ -128,7 +178,6 @@ def load_data(file_name):
     return np.loadtxt(file_name)
 
 
-# Apply KMeans clustering
 def apply_kmeans(data_points, k: int):
     """
     Apply KMeans clustering
