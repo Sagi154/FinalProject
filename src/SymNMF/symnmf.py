@@ -4,12 +4,13 @@ import numpy as np
 import math
 import symnmfmodule as c
 from tester import *
-# np.random.seed(1234)
+np.random.seed(1234)
 
-def initialize_decomposition_matrix_H(vectors_count, m, K):
+
+def initialize_decomposition_matrix_H(vectors_count: int, m: float, K: int) -> np.ndarray:
 	"""
 	Performing step 1.4.1 of the algorithm.
-	:param Vectors_count: Number of vectors in the data set.
+	:param vectors_count: Number of vectors in the data set.
 	:param m: The mean of all entries of W.
 	:param K: Number of clusters.
 	:return: Initial decomposition matrix.
@@ -19,7 +20,7 @@ def initialize_decomposition_matrix_H(vectors_count, m, K):
 	return decomposition_matrix
 
 
-def read_input_file(file_name):
+def read_input_file(file_name: str) -> list:
 	"""
 	Load dataset from a .txt file
 	:param file_name: The name of the .txt file.
@@ -41,7 +42,7 @@ def parse_arguments():
 	return K, goal, file_name
 
 
-def perform_goal(data_points, vectors_count, vector_length, K, goal):
+def perform_goal(data_points: list, vectors_count: int, vector_length: int, K: int, goal: str) -> list:
 	"""
 	Performs the required goal
 	:param data_points: A numpy array representing the data vectors.
