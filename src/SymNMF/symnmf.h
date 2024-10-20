@@ -2,74 +2,79 @@
 # include <stdlib.h>
 # include <math.h>
 
-/* The number of vectors in our data */
+/** The number of vectors in our data */
 extern int vectors_count;
 
-/* The number of coordinates in every vector in our data */
+/** The number of coordinates in every vector in our data */
 extern int vector_length;
 
-/* The number of clusters */
+/** The number of clusters */
 extern int K;
 
-/* The data vectors */
+/** The data vectors */
 extern double **data_vectors;
 
-/*
-Frees the memory of a given matrix by freeing each row's array one by one starting from
-the last row (of successfully created rows) and then free the array itself.
-
-Input:
-    double **matrix: The matrix whose memory we want to free
-    int numb_of_rows: The number of rows we wish to free which is equal to the number of rows
-    successfully created.
-
-Output: None
-*/
+/**
+ * @brief Frees the memory of a given matrix.
+ *
+ * This function frees each (successfully created) row of the matrix individually,
+ * and then frees the matrix itself.
+ *
+ * @param matrix A pointer to the matrix (double**) whose memory is to be freed.
+ * @param numb_of_rows The number of rows to free, corresponding to the number of successfully created rows.
+ *
+ * @return None
+ */
 void free_memory_of_matrix(double **matrix, int numb_of_rows);
 
-/*
-Calculates and outputs the similarity matrix as described step in 1.1.
-
-Input: None
-
-Output:
-    double **sym_matrix: returns the similarity matrix.
-*/
+/**
+ * @brief Calculates the similarity matrix.
+ *
+ * This function calculates and returns the similarity matrix as described in step 1.1.
+ *
+ * @param None
+ *
+ * @return A pointer to the similarity matrix (double**).
+ *
+ */
 double **calculate_similarity_matrix();
 
-/*
-Calculates and outputs the Diagonal Degree Matrix as described in step 1.2.
 
-Input:
-    double **similarity_matrix: the similarity matrix calculated in step 1.1.
+/**
+ * @brief Calculates the diagonal degree matrix.
+ *
+ * This function calculates and returns the diagonal degree matrix based on the
+ * provided similarity matrix as described in step 1.2.
+ *
+ * @param similarity_matrix A pointer to the similarity matrix (double**) calculated in step 1.1.
+ *
+ * @return A pointer to the diagonal degree matrix (double**).
+ */
+double **calculate_diagonal_degree_matrix(double **similarity_matrix);
 
-Output:
-    double **diagonal_degree_matrix: returns the diagonal degree matrix.
-*/
-double **calculate_diagonal_degree_matrix(double ** similarity_matrix);
-
-/*
-Calculates and outputs the normalized similarity matrix as described in step 1.3.
-
-Input:
-    double **diagonal_degree_matrix: the diagonal degree matrix calculated in step 1.2.
-    double **sym_matrix: the similarity matrix calculated in step 1.1.
-
-Output:
-    double **graph_Laplacian: returns the normalized similarity matrix.
-*/
+/**
+ * @brief Calculates the normalized similarity matrix.
+ *
+ * This function calculates and returns the normalized similarity matrix based on the provided
+ * diagonal degree matrix and similarity matrix, as described in step 1.3.
+ *
+ * @param diagonal_degree_matrix A pointer to the diagonal degree matrix (double**) calculated in step 1.2.
+ * @param sym_matrix A pointer to the similarity matrix (double**) calculated in step 1.1.
+ *
+ * @return A pointer to the normalized similarity matrix (double**).
+ */
 double **calculate_normalized_similarity_matrix(double **diagonal_degree_matrix , double **sym_matrix);
 
 
-/*
-Performs the full symNMF algorithm and outputs H.
-
-Input:
-    double **decomposition_matrix_H: the initial decomposition matrix calculated in python.
-    double **normalized_similarity_matrix: the normalized similarity matrix calculated in step 1.3.
-
-Output:
-    double **decomposition_matrix_H: returns the final decomposition_matrix_H once reached convergence.
-*/
+/**
+ * @brief Performs the full symNMF algorithm and outputs H.
+ *
+ * This function performs the symNMF algorithm, updating and returning the decomposition matrix H until convergence.
+ *
+ * @param decomposition_matrix_H A pointer to the initial decomposition matrix (double**) calculated in Python.
+ * @param normalized_similarity_matrix A pointer to the normalized similarity matrix (double**) calculated in step 1.3.
+ *
+ * @return A pointer to the final decomposition matrix H (double**), once convergence is reached.
+ */
 double **calculate_final_decomposition_matrix_symnmf(double **decomposition_matrix_H, double **normalized_similarity_matrix);
 
