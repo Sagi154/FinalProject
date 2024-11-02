@@ -484,7 +484,7 @@ int read_vectors(FILE* vectors_file) {
  * @param file_name A pointer to the file name (FILE*) to read the matrix data from.
  * @return 0 if the data is successfully extracted, or 1 if there is an error.
  */
-int extract_data_from_file(FILE* file_name) {
+int extract_data_from_file(char* file_name) {
     FILE* vectors_file;
     vectors_file = fopen(file_name, "r");
     if(vectors_file == NULL)

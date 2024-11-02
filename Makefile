@@ -5,10 +5,10 @@ SRC_FILE = src/SymNMF/symnmf.c
 all: symnmf
 
 symnmf: symnmf.o
-    $(CC) $(CFLAGS) symnmf.o -o symnmf -lm
+	$(CC) $(CFLAGS) symnmf.o -o symnmf -lm
 
 symnmf.o: $(SRC_FILE)
-    $(CC) -c $(SRC_FILE) $(CFLAGS)
+	$(CC) -c $(SRC_FILE) $(CFLAGS)
 
 clean:
-    rm -f symnmf symnmf.o
+	rm -f symnmf symnmf.o
