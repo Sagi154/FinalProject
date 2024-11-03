@@ -79,7 +79,7 @@ def main():
 	"""
 	K, goal, file_name = parse_arguments()
 	try:
-		create_data_vectors(file_name, 10, 6, 2)
+		# create_data_vectors(file_name, 10, 6, 2)
 		data_points = read_input_file(file_name)
 		if data_points is None:
 			print("An Error Has Occurred")
