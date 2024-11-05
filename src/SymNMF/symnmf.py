@@ -60,7 +60,12 @@ def perform_goal(data_points: list, vectors_count: int, vector_length: int, K: i
 			return
 		m = np.mean(normalized_similarity_matrix)
 		initial_H = initialize_decomposition_matrix_H(vectors_count, m, K)
+		"""
+		for line in initial_H:
+			print(",".join(str("%.4f" % element) for element in line))
+
 		result_matrix = c.symnmf(K, initial_H, normalized_similarity_matrix, vectors_count)
+		"""
 	elif goal == "sym":
 		result_matrix = c.sym(data_points)
 		expected = sym(data_points)
@@ -95,8 +100,8 @@ def main():
 				print(",".join(str("%.4f" % element) for element in line))
 			# print("printing expected matrix from tester")
 			# print_matrix(expected)
-			comparison = compare_results(expected, result_matrix)
-			print(f"Comparison: {comparison}")
+			# comparison = compare_results(expected, result_matrix)
+			# print(f"Comparison: {comparison}")
 	except Exception as e:
 		print("An Error Has Occurred")
 

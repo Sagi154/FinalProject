@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from sklearn.metrics import silhouette_score
 from symnmf import initialize_decomposition_matrix_H
 import symnmfmodule as c
@@ -163,13 +164,15 @@ def k_means_algorithm(vectors, K, iter_limit=300):
     return labels, centroids
 
 
-def load_data(file_name):
+def load_data(file_name: str) -> list:
     """
     Load dataset from a .txt file
     :param file_name: The name of the .txt file.
     :return: A numpy array representing the data.
     """
-    return np.loadtxt(file_name)
+    data_points = pd.read_csv(file_name, header=None)
+    data_points = data_points.to_numpy()
+    return data_points.tolist()
 
 
 def apply_kmeans(data_points, k: int):
@@ -200,7 +203,7 @@ def apply_symnmf(data_points, k: int):
     :return: SymNMF clustering of all vectors.
     """
     vectors_count, vector_length = len(data_points), len(data_points[0])
-    normalized_similarity_matrix = c.norm(data_points, vectors_count, vector_length)
+    normalized_similarity_matrix = c.norm(data_points)
     if normalized_similarity_matrix is None:
         return
     m = np.mean(normalized_similarity_matrix)

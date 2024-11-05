@@ -273,8 +273,6 @@ double **calculate_normalized_similarity_matrix(double **diagonal_degree_matrix 
     double **inverse_square_root_matrix, **graph_Laplacian_left, **graph_Laplacian;
     /* Calculates the inverse square root matrix of the diagonal degree matrix that received */
     inverse_square_root_matrix = calculate_inverse_square_root(diagonal_degree_matrix);
-    printf("Printing A-1/2\n");
-    print_matrix(inverse_square_root_matrix, vectors_count, vectors_count);
     if (inverse_square_root_matrix == NULL)
         return NULL;
     /*
@@ -286,8 +284,6 @@ double **calculate_normalized_similarity_matrix(double **diagonal_degree_matrix 
         free_memory_of_matrix(inverse_square_root_matrix, vectors_count);
         return NULL;
     }
-    printf("Printing A-1/2D\n");
-    print_matrix(graph_Laplacian_left, vectors_count, vectors_count);
     /*
      * Multiplies the product matrix calculated above with the inverse square root matrix of the diagonal degree matrix provided
      * such that the product matrix calculated above is in the left and the inverse square root matrix of the diagonal degree matrix in the right
@@ -298,11 +294,8 @@ double **calculate_normalized_similarity_matrix(double **diagonal_degree_matrix 
         free_memory_of_matrix(graph_Laplacian_left, vectors_count);
         return NULL;
     }
-    printf("matrix first value: %f \n", graph_Laplacian[0][0]);
     free_memory_of_matrix(graph_Laplacian_left, vectors_count);
     free_memory_of_matrix(inverse_square_root_matrix, vectors_count);
-    print_matrix(graph_Laplacian, vectors_count, vectors_count);
-    printf("before return\n ");
     return graph_Laplacian;
 }
 
@@ -533,7 +526,7 @@ int perform_goal(char* goal) {
             print_matrix(ddg_matrix, vectors_count, vectors_count);
         else if (strcmp(goal, "norm") == 0) {
             /* If the goal isn't to calculate the diagonal degree matrix, then it's to calculate the normalized similarity matrix. */
-            normalized_similarity_matrix = calculate_normalized_similarity_matrix(sym_matrix, ddg_matrix);
+            normalized_similarity_matrix = calculate_normalized_similarity_matrix(ddg_matrix, sym_matrix);
             if(normalized_similarity_matrix == NULL)
                 return 1;
             print_matrix(normalized_similarity_matrix, vectors_count, vectors_count);
