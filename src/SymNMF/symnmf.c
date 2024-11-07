@@ -371,7 +371,8 @@ double **calculate_final_decomposition_matrix_symnmf(double **decomposition_matr
     double frobenius_norm_value;
     double **matrix_WH, **matrix_H_Ht_H, **subtraction_matrix, **updated_H;
     iter_count = 1;
-    while (iter_count <= MAX_ITER) {
+    frobenius_norm_value = EPSILON + 1;
+    while (iter_count <= MAX_ITER && frobenius_norm_value >= EPSILON) {
         matrix_WH = multiply_matrices(normalized_similarity_matrix, decomposition_matrix_H, vectors_count, K, vectors_count);
         if (matrix_WH == NULL) {
             free_memory_of_matrix(decomposition_matrix_H, vectors_count);
@@ -394,10 +395,15 @@ double **calculate_final_decomposition_matrix_symnmf(double **decomposition_matr
         free_memory_of_matrix(subtraction_matrix, vectors_count);
         free_memory_of_matrix(decomposition_matrix_H, vectors_count);
         decomposition_matrix_H = updated_H;
-        /* Checks for convergence */
+        /* Checks for convergence
         if (frobenius_norm_value < EPSILON)
             break;
+        */
         iter_count++;
+        if (iter_count > MAX_ITER)
+          printf("Our: Maximum number of iterations exceeded\n");
+        if (frobenius_norm_value < EPSILON)
+          printf("Our: Reached convergence in %d iterations\n", iter_count - 1);
     }
     return decomposition_matrix_H;
 }

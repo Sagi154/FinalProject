@@ -4,8 +4,9 @@ import numpy as np
 import math
 import symnmfmodule as c
 from tester import *
-np.random.seed(1234)
+# np.random.seed(1234)
 
+import Prev_final_100.symnmf as prev
 
 def initialize_decomposition_matrix_H(vectors_count: int, m: float, K: int) -> np.ndarray:
 	"""
@@ -53,7 +54,8 @@ def perform_goal(data_points: list, vectors_count: int, vector_length: int, K: i
 	:return: result matrix of said goal.
 	"""
 	result_matrix = None
-	expected = None
+	# expected = None
+	prev_result = None
 	if goal == "symnmf":
 		normalized_similarity_matrix = c.norm(data_points)
 		if normalized_similarity_matrix is None:
@@ -63,19 +65,22 @@ def perform_goal(data_points: list, vectors_count: int, vector_length: int, K: i
 		"""
 		for line in initial_H:
 			print(",".join(str("%.4f" % element) for element in line))
-
-		result_matrix = c.symnmf(K, initial_H, normalized_similarity_matrix, vectors_count)
 		"""
+		result_matrix = c.symnmf(K, initial_H, normalized_similarity_matrix, vectors_count)
+		prev_result = prev.symnmf(data_points, K, vectors_count)
 	elif goal == "sym":
 		result_matrix = c.sym(data_points)
-		expected = sym(data_points)
+		# expected = sym(data_points)
+		prev_result = prev.sym(data_points)
 	elif goal == "ddg":
 		result_matrix = c.ddg(data_points)
-		expected = ddg(data_points)
+		# expected = ddg(data_points)
+		prev_result = prev.ddg(data_points)
 	elif goal == "norm":
 		result_matrix = c.norm(data_points)
-		expected = norm(data_points)
-	return result_matrix, expected
+		# expected = norm(data_points)
+		prev_result = prev.norm(data_points)
+	return result_matrix, prev_result
 
 
 def main():
@@ -90,7 +95,8 @@ def main():
 			print("An Error Has Occurred")
 			return
 		vectors_count, vector_length = len(data_points), len(data_points[0])
-		result_matrix, expected = perform_goal(data_points, vectors_count, vector_length, K, goal)
+		# result_matrix = perform_goal(data_points, vectors_count, vector_length, K, goal)
+		result_matrix, prev_result = perform_goal(data_points, vectors_count, vector_length, K, goal)
 		if result_matrix is None:
 			print("An Error Has Occurred")
 			return
@@ -98,10 +104,10 @@ def main():
 			print("printing result matrix received from C")
 			for line in result_matrix:
 				print(",".join(str("%.4f" % element) for element in line))
-			# print("printing expected matrix from tester")
-			# print_matrix(expected)
-			# comparison = compare_results(expected, result_matrix)
-			# print(f"Comparison: {comparison}")
+			print("printing expected matrix from tester")
+			print_matrix(prev_result)
+			comparison = compare_results(prev_result, result_matrix)
+			print(f"Comparison: {comparison}")
 	except Exception as e:
 		print("An Error Has Occurred")
 

@@ -6,8 +6,18 @@ import pprint
 import math
 # np.random.seed(1234)
 import logging
+import os
+
+import Prev_final_100.symnmf as prev
+import Prev_final_100.analysis as prev_anal
+import symnmf as our
 
 FILE_NAME = "input.txt"
+
+current_dir = "."
+prev_dir = "Prev_final_100"
+current_symnmf_path = "${current_dir}/symnmf.py"
+prev_symnmf_path = "${prev_dir}/symnmf.py"
 
 
 def set_log_config():
@@ -44,6 +54,7 @@ def compare_results(expected, actual):
 				print(f"Error at ({i},{j}) element")
 				return False
 	return True
+
 
 
 def print_matrix(matrix):
@@ -87,25 +98,55 @@ def norm(data_points):
 	norm_matrix = norm_matrix @ ddg_inv_sqrt
 	return norm_matrix
 
+def reached_error(expected, actual, goal):
+	print(f"Comparison in goal:{goal} failed")
+	print("Expected matrix:")
+	print_matrix(expected)
+	print("actual matrix:")
+	print_matrix(actual)
+
+def run_test(vectors_count_limit, vector_length_limit, cord_value_limit):
+	print("Running test...")
+	count = 0
+	for i in range(2, vectors_count_limit):
+		for j in range(2, vector_length_limit):
+			vectors_count = i
+			vector_length = j
+			file_name = f"testing/input_{i}_{j}.txt"
+			data_points = create_data_vectors(file_name, vectors_count, vector_length, cord_value_limit).tolist()
+			for K in range(1, min(vectors_count, 5) + 1):
+				print(f"Running test for matrix ({i},{j})")
+				sym_matrix_our, sym_matrix_prev = our.perform_goal(data_points, i, j, K, "sym")
+				if not compare_results(sym_matrix_prev, sym_matrix_our):
+					reached_error(sym_matrix_prev, sym_matrix_our, "sym")
+					count += 1
+					return
+				ddg_matrix_our, ddg_matrix_prev = our.perform_goal(data_points, i, j, K, "ddg")
+				if not compare_results(ddg_matrix_prev, ddg_matrix_our):
+					reached_error(ddg_matrix_prev, ddg_matrix_our, "ddg")
+					count += 1
+					return
+				norm_matrix_our, norm_matrix_prev = our.perform_goal(data_points, i, j, K, "norm")
+				if not compare_results(norm_matrix_prev, norm_matrix_our):
+					reached_error(norm_matrix_prev, norm_matrix_our, "norm")
+					count += 1
+					return
+				symnmf_matrix_our, symnmf_matrix_prev = our.perform_goal(data_points, i, j, K, "symnmf")
+				if not compare_results(symnmf_matrix_prev, symnmf_matrix_our):
+					reached_error(symnmf_matrix_prev, symnmf_matrix_our, "symnmf")
+					count += 1
+			# return
+				# os.remove(f"{file_name}")
+				# if successful and reached here, delete previous test file
+	print(f"Errors count: {count}")
+	print("Test successful")
+
 
 def main():
-	flag = False
-	set_log_config()
-	n = 10
-	vector_len = 5
-	bound = 1
-	if flag:
-		create_data_vectors(FILE_NAME, n, vector_len, bound)
-	data_points = read_input_file(FILE_NAME)
-	print("Data points:")
-	print_matrix(data_points)
-	sym_matrix = sym(data_points)
-	print("Similarity matrix:")
-	print_matrix(sym_matrix)
-	print("call for ddg")
-	ddg_matrix = ddg(data_points)
-	print("call for norm")
-	print_matrix(norm(data_points))
+	vectors_count_limit = 5
+	vector_length_limit = 4
+	cord_value_limit = 2
+	run_test(vectors_count_limit, vector_length_limit, cord_value_limit)
 
 
 if __name__ == '__main__':
