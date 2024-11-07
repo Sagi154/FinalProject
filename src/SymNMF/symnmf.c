@@ -395,15 +395,7 @@ double **calculate_final_decomposition_matrix_symnmf(double **decomposition_matr
         free_memory_of_matrix(subtraction_matrix, vectors_count);
         free_memory_of_matrix(decomposition_matrix_H, vectors_count);
         decomposition_matrix_H = updated_H;
-        /* Checks for convergence
-        if (frobenius_norm_value < EPSILON)
-            break;
-        */
         iter_count++;
-        if (iter_count > MAX_ITER)
-          printf("Our: Maximum number of iterations exceeded\n");
-        if (frobenius_norm_value < EPSILON)
-          printf("Our: Reached convergence in %d iterations\n", iter_count - 1);
     }
     return decomposition_matrix_H;
 }
@@ -416,10 +408,8 @@ double **calculate_final_decomposition_matrix_symnmf(double **decomposition_matr
  * elements in each vector (vector length) and counts the total number of vectors in the file.
  * It updates the global variables `vectors_count` and `vector_length` accordingly.
  * @param vectors_file A pointer to the file (FILE*) containing the matrix data.
- * @return 0 if the dimensions are successfully retrieved, or 1 if there is an error.
  */
-/* TODO: only returns 0? */
-int get_matrix_dimensions(FILE* vectors_file) {
+void get_matrix_dimensions(FILE* vectors_file) {
     char line[MAX_LINE_LENGTH];
     vectors_count = 0;
     vector_length = 0;
@@ -442,7 +432,6 @@ int get_matrix_dimensions(FILE* vectors_file) {
 
     /* Returns to the beginning of the file in order to read the vectors afterward */
     rewind(vectors_file);
-    return 0;
 }
 
 

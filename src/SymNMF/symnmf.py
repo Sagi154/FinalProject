@@ -3,10 +3,8 @@ import pandas as pd
 import numpy as np
 import math
 import symnmfmodule as c
-from tester import *
 np.random.seed(1234)
 
-import Prev_final_100.symnmf as prev
 
 def initialize_decomposition_matrix_H(vectors_count: int, m: float, K: int) -> np.ndarray:
 	"""
@@ -17,7 +15,8 @@ def initialize_decomposition_matrix_H(vectors_count: int, m: float, K: int) -> n
 	:return: Initial decomposition matrix.
 	"""
 	# Upper bound not tight
-	decomposition_matrix = [[np.random.uniform(low=0, high=(2 * math.sqrt(m/K) + 1e-10)) for j in range(K)] for i in range(vectors_count)]
+	decomposition_matrix = [[2 * math.sqrt(m / K) * np.random.uniform(0, 1) for j in range(K)] for i in range(vectors_count)]
+	# decomposition_matrix = [[np.random.uniform(low=0, high=(2 * math.sqrt(m / K) + 1e-10)) for j in range(K)] for i in range(vectors_count)]
 	return decomposition_matrix
 
 
@@ -54,32 +53,20 @@ def perform_goal(data_points: list, vectors_count: int, vector_length: int, K: i
 	:return: result matrix of said goal.
 	"""
 	result_matrix = None
-	# expected = None
-	prev_result = None
 	if goal == "symnmf":
 		normalized_similarity_matrix = c.norm(data_points)
 		if normalized_similarity_matrix is None:
 			return
 		m = np.mean(np.array(normalized_similarity_matrix))
 		initial_H = initialize_decomposition_matrix_H(vectors_count, m, K)
-		print("Initial H in our:")
-		for line in initial_H:
-			print(",".join(str("%.4f" % element) for element in line))
 		result_matrix = c.symnmf(K, initial_H, normalized_similarity_matrix, vectors_count)
-		prev_result = prev.symnmf(data_points, K, vectors_count)
 	elif goal == "sym":
 		result_matrix = c.sym(data_points)
-		# expected = sym(data_points)
-		prev_result = prev.sym(data_points)
 	elif goal == "ddg":
 		result_matrix = c.ddg(data_points)
-		# expected = ddg(data_points)
-		prev_result = prev.ddg(data_points)
 	elif goal == "norm":
 		result_matrix = c.norm(data_points)
-		# expected = norm(data_points)
-		prev_result = prev.norm(data_points)
-	return result_matrix, prev_result
+	return result_matrix
 
 
 def main():
@@ -88,25 +75,18 @@ def main():
 	"""
 	K, goal, file_name = parse_arguments()
 	try:
-		# create_data_vectors(file_name, 10, 6, 2)
 		data_points = read_input_file(file_name)
 		if data_points is None:
 			print("An Error Has Occurred")
 			return
 		vectors_count, vector_length = len(data_points), len(data_points[0])
-		# result_matrix = perform_goal(data_points, vectors_count, vector_length, K, goal)
-		result_matrix, prev_result = perform_goal(data_points, vectors_count, vector_length, K, goal)
+		result_matrix = perform_goal(data_points, vectors_count, vector_length, K, goal)
 		if result_matrix is None:
 			print("An Error Has Occurred")
 			return
 		else:
-			print("printing result matrix received from C")
 			for line in result_matrix:
 				print(",".join(str("%.4f" % element) for element in line))
-			print("printing expected matrix from tester")
-			print_matrix(prev_result)
-			comparison = compare_results(prev_result, result_matrix)
-			print(f"Comparison: {comparison}")
 	except Exception as e:
 		print("An Error Has Occurred")
 

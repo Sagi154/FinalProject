@@ -2,15 +2,13 @@ import pandas as pd
 from scipy.spatial.distance import euclidean, pdist, squareform
 from scipy.sparse.csgraph import laplacian
 import numpy as np
-import pprint
 import math
-np.random.seed(1234)
 import logging
 import os
 
-import Prev_final_100.symnmf as prev
-import Prev_final_100.analysis as prev_anal
 import symnmf as our
+np.random.seed(1234)
+
 
 FILE_NAME = "input.txt"
 
@@ -153,8 +151,8 @@ def main():
 	vectors_count_limit = 5
 	vector_length_limit = 4
 	cord_value_limit = 2
-	data_points = read_input_file("tests/input_1.txt").tolist()
-	print(f"Error count: {run_test(data_points, 10, 5, 5)}")
+	data_points = read_input_file("tests/input_2.txt").tolist()
+	print(f"Error count: {run_test(data_points, 20, 6, 4)}")
 	# start_test(vectors_count_limit, vector_length_limit, cord_value_limit)
 
 
