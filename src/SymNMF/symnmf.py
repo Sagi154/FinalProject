@@ -4,7 +4,7 @@ import numpy as np
 import math
 import symnmfmodule as c
 from tester import *
-# np.random.seed(1234)
+np.random.seed(1234)
 
 import Prev_final_100.symnmf as prev
 
@@ -60,12 +60,11 @@ def perform_goal(data_points: list, vectors_count: int, vector_length: int, K: i
 		normalized_similarity_matrix = c.norm(data_points)
 		if normalized_similarity_matrix is None:
 			return
-		m = np.mean(normalized_similarity_matrix)
+		m = np.mean(np.array(normalized_similarity_matrix))
 		initial_H = initialize_decomposition_matrix_H(vectors_count, m, K)
-		"""
+		print("Initial H in our:")
 		for line in initial_H:
 			print(",".join(str("%.4f" % element) for element in line))
-		"""
 		result_matrix = c.symnmf(K, initial_H, normalized_similarity_matrix, vectors_count)
 		prev_result = prev.symnmf(data_points, K, vectors_count)
 	elif goal == "sym":

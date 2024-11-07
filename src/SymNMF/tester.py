@@ -4,7 +4,7 @@ from scipy.sparse.csgraph import laplacian
 import numpy as np
 import pprint
 import math
-# np.random.seed(1234)
+np.random.seed(1234)
 import logging
 import os
 
@@ -105,7 +105,33 @@ def reached_error(expected, actual, goal):
 	print("actual matrix:")
 	print_matrix(actual)
 
-def run_test(vectors_count_limit, vector_length_limit, cord_value_limit):
+
+def run_test(data_points, vectors_count, vector_length, K):
+	count = 0
+	print(f"Running test for matrix ({vectors_count},{vector_length})")
+	sym_matrix_our, sym_matrix_prev = our.perform_goal(data_points, vectors_count, vector_length, K, "sym")
+	if not compare_results(sym_matrix_prev, sym_matrix_our):
+		reached_error(sym_matrix_prev, sym_matrix_our, "sym")
+		count += 1
+		return
+	ddg_matrix_our, ddg_matrix_prev = our.perform_goal(data_points, vectors_count, vector_length, K, "ddg")
+	if not compare_results(ddg_matrix_prev, ddg_matrix_our):
+		reached_error(ddg_matrix_prev, ddg_matrix_our, "ddg")
+		count += 1
+		return
+	norm_matrix_our, norm_matrix_prev = our.perform_goal(data_points, vectors_count, vector_length, K, "norm")
+	if not compare_results(norm_matrix_prev, norm_matrix_our):
+		reached_error(norm_matrix_prev, norm_matrix_our, "norm")
+		count += 1
+		return
+	symnmf_matrix_our, symnmf_matrix_prev = our.perform_goal(data_points, vectors_count, vector_length, K, "symnmf")
+	if not compare_results(symnmf_matrix_prev, symnmf_matrix_our):
+		reached_error(symnmf_matrix_prev, symnmf_matrix_our, "symnmf")
+		count += 1
+	return count
+
+
+def start_test(vectors_count_limit, vector_length_limit, cord_value_limit):
 	print("Running test...")
 	count = 0
 	for i in range(2, vectors_count_limit):
@@ -115,26 +141,7 @@ def run_test(vectors_count_limit, vector_length_limit, cord_value_limit):
 			file_name = f"testing/input_{i}_{j}.txt"
 			data_points = create_data_vectors(file_name, vectors_count, vector_length, cord_value_limit).tolist()
 			for K in range(1, min(vectors_count, 5) + 1):
-				print(f"Running test for matrix ({i},{j})")
-				sym_matrix_our, sym_matrix_prev = our.perform_goal(data_points, i, j, K, "sym")
-				if not compare_results(sym_matrix_prev, sym_matrix_our):
-					reached_error(sym_matrix_prev, sym_matrix_our, "sym")
-					count += 1
-					return
-				ddg_matrix_our, ddg_matrix_prev = our.perform_goal(data_points, i, j, K, "ddg")
-				if not compare_results(ddg_matrix_prev, ddg_matrix_our):
-					reached_error(ddg_matrix_prev, ddg_matrix_our, "ddg")
-					count += 1
-					return
-				norm_matrix_our, norm_matrix_prev = our.perform_goal(data_points, i, j, K, "norm")
-				if not compare_results(norm_matrix_prev, norm_matrix_our):
-					reached_error(norm_matrix_prev, norm_matrix_our, "norm")
-					count += 1
-					return
-				symnmf_matrix_our, symnmf_matrix_prev = our.perform_goal(data_points, i, j, K, "symnmf")
-				if not compare_results(symnmf_matrix_prev, symnmf_matrix_our):
-					reached_error(symnmf_matrix_prev, symnmf_matrix_our, "symnmf")
-					count += 1
+				count += run_test(data_points, vectors_count, vector_length, K)
 			# return
 				# os.remove(f"{file_name}")
 				# if successful and reached here, delete previous test file
@@ -146,7 +153,9 @@ def main():
 	vectors_count_limit = 5
 	vector_length_limit = 4
 	cord_value_limit = 2
-	run_test(vectors_count_limit, vector_length_limit, cord_value_limit)
+	data_points = read_input_file("tests/input_1.txt").tolist()
+	print(f"Error count: {run_test(data_points, 10, 5, 5)}")
+	# start_test(vectors_count_limit, vector_length_limit, cord_value_limit)
 
 
 if __name__ == '__main__':

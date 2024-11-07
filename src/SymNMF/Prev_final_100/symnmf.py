@@ -6,7 +6,7 @@ import prev_symnmfmodule as s  # C module
 goal_list = ['symnmf', 'sym', 'ddg', 'norm']
 
 # initializing the random function
-# np.random.seed(1234)
+np.random.seed(1234)
 
 
 def createDVectors(file):
@@ -55,6 +55,8 @@ def symnmf(X, k, N):
         initial_h.append([])
         for j in range(k):
             initial_h[i].append(2 * np.sqrt(m / k) * np.random.uniform())
+    print("Initial H in prev:")
+    printMat(initial_h)
     return s.symnmf(initial_h, W)
 
 
