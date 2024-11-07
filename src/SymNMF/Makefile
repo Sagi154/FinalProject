@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -ansi -Wall -Wextra -Werror -pedantic-errors
-SRC_FILE = src/SymNMF/symnmf.c
+SRC_FILE = symnmf.c
 
 all: symnmf
 
