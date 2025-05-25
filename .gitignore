@@ -5,4 +5,6 @@ __pycache__/
 build/
 my_logs.log
 symnmfmodule.cp311-win_amd64.pyd
+Pipfile
+Pipfile.lock
 
